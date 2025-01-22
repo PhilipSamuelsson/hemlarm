@@ -1,7 +1,6 @@
 # Diagram
 
 ```mermaid
-
 graph TD
     subgraph Edge Devices
         P1[Raspberry Pi Pico W #1]
