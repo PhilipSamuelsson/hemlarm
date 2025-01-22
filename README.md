@@ -3,7 +3,7 @@ graph TD
     subgraph Edge Devices
         P1[Raspberry Pi Pico W #1]
         P2[Raspberry Pi Pico W #2]
-        Pn[Raspberry Pi Pico W #N]
+        Pn[Raspberry Pi Pico W #3]
     end
     
     subgraph Gateway
