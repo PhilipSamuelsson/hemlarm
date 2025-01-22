@@ -7,7 +7,7 @@ graph TD
     end
     
     subgraph Gateway
-        RP[Raspberry Pi (Central Enhet)]
+        RP["Raspberry Pi (Central Enhet)"]
     end
     
     subgraph Backend
