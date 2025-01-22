@@ -1,3 +1,5 @@
+# Diagram
+
 ```mermaid
 graph TD
     subgraph Edge Devices
