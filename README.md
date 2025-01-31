@@ -93,7 +93,7 @@ This project is an IoT-based alarm system with a Next.js frontend and a Flask ba
 ### 2️⃣ Frontend (Next.js UI)
 1. Navigate to the `frontend` folder:
    ```sh
-   cd ../frontend
+   cd frontend
    ```
 2. Install dependencies:
    ```sh
