@@ -40,6 +40,7 @@ graph TD;
     end
 
     API_Frontend -->|Trigger Notification| Notifier
+
 ## Tech stack
 
 - ✅ Frontend – React (med Next.js) eller Vue (med Nuxt.js)
