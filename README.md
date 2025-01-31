@@ -1,5 +1,6 @@
 # Diagram
 
+```mermaid
 graph TD;
     
     subgraph "Frontend (Next.js)"
