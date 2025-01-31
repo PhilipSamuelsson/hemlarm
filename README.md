@@ -1,5 +1,5 @@
 # Diagram
-
+```mermaid
 graph TD;
     
     subgraph Frontend (Next.js)
@@ -40,6 +40,7 @@ graph TD;
     end
 
     API_Frontend -->|Trigger Notification| Notifier
+```
 ## Tech stack
 
 - ✅ Frontend – React (med Next.js) eller Vue (med Nuxt.js)
