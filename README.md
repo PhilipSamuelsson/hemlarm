@@ -2,12 +2,12 @@
 ```mermaid
 graph TD;
     
-    subgraph Frontend (Next.js)
+    subgraph Frontend_NextJS
         UI[User Interface]
         UI -->|Fetch API| API_Frontend
     end
 
-    subgraph Backend (Flask)
+    subgraph Backend_Flask
         API_Frontend[REST API]
         API_Frontend -->|GET/POST| Devices_Endpoint[/api/devices/]
         API_Frontend -->|GET| Logs_Endpoint[/api/logs/]
@@ -17,7 +17,7 @@ graph TD;
         Logs_Endpoint -->|Read| DB
     end
     
-    subgraph IoT Edge Devices
+    subgraph IoT_Edge_Devices
         RPi3["Raspberry Pi 3 (Gateway)"]
         Pico1["Raspberry Pi Pico W #1"]
         Pico2["Raspberry Pi Pico W #2"]
