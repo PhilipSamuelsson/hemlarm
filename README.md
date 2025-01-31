@@ -1,30 +1,45 @@
 # Diagram
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mermaid Diagram</title>
-    <script type="module">
-        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.esm.min.mjs';
-        mermaid.initialize({ startOnLoad: true });
-    </script>
-</head>
-<body>
-    <pre class="mermaid">
-        graph TD;
-        UI[User Interface] -->|Fetch API| API_Frontend[REST API]
+graph TD;
+    
+    subgraph Frontend (Next.js)
+        UI[User Interface]
+        UI -->|Fetch API| API_Frontend
+    end
+
+    subgraph Backend (Flask)
+        API_Frontend[REST API]
         API_Frontend -->|GET/POST| Devices_Endpoint[/api/devices/]
         API_Frontend -->|GET| Logs_Endpoint[/api/logs/]
         API_Frontend -->|POST| Toggle_Alarm_Endpoint[/api/toggle_alarm/:id]
         DB[(Database)]
         Devices_Endpoint -->|Read/Write| DB
         Logs_Endpoint -->|Read| DB
-    </pre>
-</body>
-</html>
+    end
+    
+    subgraph IoT Edge Devices
+        RPi3["Raspberry Pi 3 (Gateway)"]
+        Pico1["Raspberry Pi Pico W #1"]
+        Pico2["Raspberry Pi Pico W #2"]
+        PicoN["Raspberry Pi Pico W #N"]
+    end
 
+    UI -->|API Requests| API_Frontend
+    API_Frontend -->|Control| RPi3
+    RPi3 -->|MQTT/WebSockets| Pico1
+    RPi3 -->|MQTT/WebSockets| Pico2
+    RPi3 -->|MQTT/WebSockets| PicoN
+    Pico1 -->|Motion Data| RPi3
+    Pico2 -->|Motion Data| RPi3
+    PicoN -->|Motion Data| RPi3
+
+    subgraph Notifications
+        Notifier[Notification System]
+        Notifier -->|Push Notification| Phone["User's Phone"]
+        Notifier -->|Email Alert| Email["User's Email"]
+    end
+
+    API_Frontend -->|Trigger Notification| Notifier
 ## Tech stack
 
 - ✅ Frontend – React (med Next.js) eller Vue (med Nuxt.js)
