@@ -41,6 +41,7 @@ graph TD;
     end
 
     API_Frontend -->|Trigger Notification| Notifier
+``` 
 
 ## Tech stack
 
