@@ -1,36 +1,45 @@
 # Diagram
 
-```mermaid
-graph TD
-    subgraph Edge Devices
-        P1[Raspberry Pi Pico W #1]
-        P2[Raspberry Pi Pico W #2]
-        Pn[Raspberry Pi Pico W #3]
-    end
+graph TD;
     
-    subgraph Gateway
-        RP["Raspberry Pi (Central Enhet)"]
-    end
-    
-    subgraph Backend
-        Server[Webbserver]
-        DB[Databas]
-    end
-    
-    subgraph Notifications
-        Phone[Telefon/Pushnotiser]
-        Email[E-post]
+    subgraph "Frontend (Next.js)"
+        UI[User Interface]
+        UI -->|Fetch API| API_Frontend
     end
 
-    %% Connections
-    P1 -->|MQTT/HTTP| RP
-    P2 -->|MQTT/HTTP| RP
-    Pn -->|MQTT/HTTP| RP
-    RP -->|Samlar in data| Server
-    Server -->|Lagrar data| DB
-    Server -->|Skickar notifiering| Phone
-    Server -->|Skickar notifiering| Email
-```
+    subgraph "Backend (Flask)"
+        API_Frontend[REST API]
+        API_Frontend -->|GET/POST| Devices_Endpoint[/api/devices/]
+        API_Frontend -->|GET| Logs_Endpoint[/api/logs/]
+        API_Frontend -->|POST| Toggle_Alarm_Endpoint[/api/toggle_alarm/:id]
+        DB[(Database)]
+        Devices_Endpoint -->|Read/Write| DB
+        Logs_Endpoint -->|Read| DB
+    end
+    
+    subgraph "IoT Edge Devices"
+        RPi3["Raspberry Pi 3 (Gateway)"]
+        Pico1["Raspberry Pi Pico W #1"]
+        Pico2["Raspberry Pi Pico W #2"]
+        PicoN["Raspberry Pi Pico W #N"]
+    end
+
+    UI -->|API Requests| API_Frontend
+    API_Frontend -->|Control| RPi3
+    RPi3 -->|MQTT/WebSockets| Pico1
+    RPi3 -->|MQTT/WebSockets| Pico2
+    RPi3 -->|MQTT/WebSockets| PicoN
+    Pico1 -->|Motion Data| RPi3
+    Pico2 -->|Motion Data| RPi3
+    PicoN -->|Motion Data| RPi3
+
+    subgraph "Notifications"
+        Notifier[Notification System]
+        Notifier -->|Push Notification| Phone["User's Phone"]
+        Notifier -->|Email Alert| Email["User's Email"]
+    end
+
+    API_Frontend -->|Trigger Notification| Notifier
 ## Tech stack
 
 - ✅ Frontend – React (med Next.js) eller Vue (med Nuxt.js)
