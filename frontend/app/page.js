@@ -7,18 +7,60 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL; // Load the API URL from .env.l
 const Dashboard = () => {
   const [devices, setDevices] = useState([]);
   const [logs, setLogs] = useState([]);
+  const [loadingLogs, setLoadingLogs] = useState(true);
 
   // Fetch devices
   useEffect(() => {
-    fetch(`${API_URL}/devices`)
-      .then((res) => res.json())
-      .then((data) => setDevices(data))
-      .catch((err) => console.error("Error fetching devices:", err));
+    const fetchDevices = async () => {
+      try {
+        const res = await fetch(`${API_URL}/devices`);
+        const data = await res.json();
 
-    fetch(`${API_URL}/logs`)
-      .then((res) => res.json())
-      .then((data) => setLogs(data))
-      .catch((err) => console.error("Error fetching logs:", err));
+        console.log("API Devices Response:", data); // Debugging log
+
+        if (Array.isArray(data)) {
+          setDevices(data);
+        } else if (typeof data === "object") {
+          // Convert object into an array of devices
+          setDevices(Object.entries(data).map(([id, details]) => ({
+            id,
+            ...details
+          })));
+        } else {
+          setDevices([]); // Default to an empty array
+        }
+      } catch (err) {
+        console.error("Error fetching devices:", err);
+      }
+    };
+
+    fetchDevices();
+  }, []);
+
+  // Fetch logs
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        const res = await fetch(`${API_URL}/logs`);
+        const data = await res.json();
+
+        console.log("API Logs Response:", data); // Debugging log
+
+        if (Array.isArray(data)) {
+          setLogs(data);
+        } else {
+          setLogs([]);
+        }
+      } catch (err) {
+        console.error("Error fetching logs:", err);
+      } finally {
+        setLoadingLogs(false);
+      }
+    };
+
+    
+
+    fetchLogs();
   }, []);
 
   // Toggle Alarm
@@ -31,7 +73,7 @@ const Dashboard = () => {
             device.id === updatedDevice.id ? { ...device, isActive: updatedDevice.isActive } : device
           )
         );
-  
+
         const newLog = {
           timestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
           message: `${updatedDevice.name} alarm ${
@@ -73,17 +115,19 @@ const Dashboard = () => {
 
       <div className="p-4 border rounded-md bg-gray-800 text-white shadow-lg mt-4">
         <h2 className="text-xl mb-2">Activity Log</h2>
-        <ul>
-          {logs.length === 0 ? (
-            <p className="text-gray-400">No activity recorded</p>
-          ) : (
-            logs.map((log, index) => (
+        {loadingLogs ? (
+          <p className="text-gray-400">Loading logs...</p>
+        ) : logs.length === 0 ? (
+          <p className="text-gray-400">No activity recorded</p>
+        ) : (
+          <ul>
+            {logs.map((log, index) => (
               <li key={index} className="border-b p-2">
-                {log.timestamp} - {log.message}
+                {log.timestamp} - {log.device_id} - {log.message}
               </li>
-            ))
-          )}
-        </ul>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
