@@ -4,8 +4,8 @@ import time
 from machine import Pin, time_pulse_us
 
 # WiFi Setup
-SSID = "Telia-4A1A20"
-PASSWORD = "rAnCeAheCxG68w6x"
+SSID = "WIfI Name"  # Change this to your WiFi SSID
+PASSWORD = "WiFi Password"  # Change this to your WiFi password
 DEVICE_ID = "Philips_pico"  # Change this for each Pico W
 
 wlan = network.WLAN(network.STA_IF)
@@ -19,7 +19,7 @@ while not wlan.isconnected():
 print("Connected to WiFi:", wlan.ifconfig())
 
 # Register this Pico with the Flask server
-FLASK_URL = "http://192.168.1.175:5000/api" # Change this to your Flask server's IP
+FLASK_URL = "http://XXX.XXX.X.XXX:5000/api" # Change this to your Flask server's IP
 
 try:
     response = urequests.post(f"{FLASK_URL}/register_device", json={"device_id": DEVICE_ID})
