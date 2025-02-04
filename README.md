@@ -68,8 +68,8 @@ Follow these steps to set up the project for the first time.
 
 ### 1️⃣ **Clone the Repository**
 ```bash
-git clone https://github.com/your-repo/iot-motion-detection.git
-cd iot-motion-detection
+git clone https://github.com/hemlarm.git
+cd hemlarm
 ```
 
 ### 2️⃣ **Set Up Backend (Flask)**
@@ -79,19 +79,6 @@ python -m venv venv  # Create virtual environment
 source venv/bin/activate  # Activate (Mac/Linux)
 venv\Scripts\activate  # Activate (Windows)
 pip install -r requirements.txt  # Install dependencies
-```
-
-### 3️⃣ **Set Up Environment Variables**
-Create a `.env` file inside the `backend/` folder:
-```bash
-touch .env
-```
-Add the following (update with your values):
-```
-FLASK_APP=run.py
-FLASK_ENV=development
-API_HOST=0.0.0.0
-API_PORT=5001
 ```
 
 ### 4️⃣ **Start the Backend**
@@ -112,7 +99,7 @@ touch .env.local
 ```
 Add the following:
 ```
-NEXT_PUBLIC_API_URL=http://localhost:5001/api
+NEXT_PUBLIC_API_URL=http://localhost:5000/api
 ```
 
 ### 7️⃣ **Start the Frontend**
