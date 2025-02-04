@@ -60,71 +60,91 @@ This project is an IoT-based alarm system with a Next.js frontend and a Flask ba
 - Toggle alarm on/off for each device
 - View activity logs
 
-## 🛠️ Tech Stack
-- **Frontend:** Next.js (React)
-- **Backend:** Flask (Python)
-- **Database:** In-memory (for now, can be extended)
-- **Communication:** REST API
+# IoT Motion Detection System
 
-## 📂 Project Structure
-```
-/root-folder
-│── /frontend       # Next.js app
-│── /backend        # Flask backend
-│   │── /app        # Flask application
-│   │── /instance   # Database storage (if needed)
-│   │── /migrations # DB migrations (if using SQLAlchemy)
-│   │── requirements.txt
-│   │── run.py      # Flask entry point
+## 🚀 First-Time Setup
+
+Follow these steps to set up the project for the first time.
+
+### 1️⃣ **Clone the Repository**
+```bash
+git clone https://github.com/your-repo/iot-motion-detection.git
+cd iot-motion-detection
 ```
 
-## 🏗️ Setup and Run Instructions
+### 2️⃣ **Set Up Backend (Flask)**
+```bash
+cd backend
+python -m venv venv  # Create virtual environment
+source venv/bin/activate  # Activate (Mac/Linux)
+venv\Scripts\activate  # Activate (Windows)
+pip install -r requirements.txt  # Install dependencies
+```
 
-### 1️⃣ Backend (Flask API)
-1. Navigate to the `backend` folder:
-   ```sh
-   cd backend
-   ```
-2. Create and activate a virtual environment:
-   ```sh
-   python -m venv venv
-   source venv/bin/activate  # Mac/Linux
-   venv\Scripts\activate     # Windows
-   ```
-3. Install dependencies:
-   ```sh
-   pip install -r requirements.txt
-   ```
-4. Run the Flask server:
-   ```sh
-   python run.py
-   ```
-   The backend should now be running at: **http://127.0.0.1:5000**
+### 3️⃣ **Set Up Environment Variables**
+Create a `.env` file inside the `backend/` folder:
+```bash
+touch .env
+```
+Add the following (update with your values):
+```
+FLASK_APP=run.py
+FLASK_ENV=development
+API_HOST=0.0.0.0
+API_PORT=5001
+```
 
-### 2️⃣ Frontend (Next.js UI)
-1. Navigate to the `frontend` folder:
-   ```sh
-   cd frontend
-   ```
-2. Install dependencies:
-   ```sh
-   npm install
-   ```
-3. Create a `.env.local` file and add:
-   ```plaintext
-   NEXT_PUBLIC_API_URL=http://127.0.0.1:5000/api
-   ```
-4. Start the frontend:
-   ```sh
-   npm run dev
-   ```
-   The frontend should now be running at: **http://localhost:3000**
+### 4️⃣ **Start the Backend**
+```bash
+python run.py
+```
 
-## 🧪 Testing the API
-- Open a browser or Postman and visit:
-  - `http://127.0.0.1:5000/api/devices`
-  - `http://127.0.0.1:5000/api/logs`
-- Or use curl:
-  ```sh
-  curl http://127.0.0.1:5000/api/devices
-  ```
+### 5️⃣ **Set Up Frontend (Next.js)**
+```bash
+cd ../frontend
+npm install  # Install dependencies
+```
+
+### 6️⃣ **Set Up Frontend Environment Variables**
+Create a `.env.local` file inside the `frontend/` folder:
+```bash
+touch .env.local
+```
+Add the following:
+```
+NEXT_PUBLIC_API_URL=http://localhost:5001/api
+```
+
+### 7️⃣ **Start the Frontend**
+```bash
+npm run dev
+```
+
+---
+
+## 🔄 Continuing Development
+
+### **Starting the Backend**
+```bash
+cd backend
+source venv/bin/activate  # Activate virtual environment
+python run.py  # Start Flask API
+```
+
+### **Starting the Frontend**
+```bash
+cd frontend
+npm run dev  # Start Next.js frontend
+```
+
+### **Checking Logs**
+- **Backend logs**: Open terminal in `backend/` and watch for Flask API logs.
+- **Frontend logs**: Open browser DevTools (`F12`) → Console.
+
+### **Stopping the Application**
+- **Backend:** Press `CTRL+C` in the terminal.
+- **Frontend:** Press `CTRL+C` in the terminal.
+
+---
+
+### ✅ You're now ready to develop and test your IoT Motion Detection System!
