@@ -12,7 +12,7 @@ graph TD;
         API_Frontend[REST API]
         API_Frontend -->|GET/POST| Devices_Endpoint[/api/devices/]
         API_Frontend -->|GET| Logs_Endpoint[/api/logs/]
-        API_Frontend -->|POST| Toggle_Alarm_Endpoint[:/api/toggle_alarm/:id]
+        API_Frontend -->|POST| Toggle_Alarm_Endpoint[api/toggle_alarm/:id]
         DB[(Database)]
         Devices_Endpoint -->|Read/Write| DB
         Logs_Endpoint -->|Read| DB
