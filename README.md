@@ -68,7 +68,7 @@ Follow these steps to set up the project for the first time.
 
 ### 1️⃣ **Clone the Repository**
 ```bash
-git clone https://github.com/hemlarm.git
+git clone [https://github.com/hemlarm.git](https://github.com/PhilipSamuelsson/hemlarm.git)
 cd hemlarm
 ```
 
