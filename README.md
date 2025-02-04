@@ -135,4 +135,15 @@ npm run dev  # Start Next.js frontend
 
 ---
 
+
+## 🧪 Testing the API 
+The frontend should now be running at: **http://localhost:3000** 
+
+Open a browser or Postman and visit: 
+http://127.0.0.1:5000/api/devices 
+and
+http://127.0.0.1:5000/api/logs
+
+Or use curl: sh curl http://127.0.0.1:5000/api/devices
+
 ### ✅ You're now ready to develop and test your IoT Motion Detection System!
