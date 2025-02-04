@@ -114,7 +114,8 @@ npm run dev
 ### **Starting the Backend**
 ```bash
 cd backend
-source venv/bin/activate  # Activate virtual environment
+source venv/bin/activate  # Activate virtual environment (Linux)
+venv\Scripts\activate  # Activate (Windows)
 python run.py  # Start Flask API
 ```
 
