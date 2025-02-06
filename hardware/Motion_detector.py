@@ -6,7 +6,7 @@ from machine import Pin, time_pulse_us
 # WiFi Setup
 SSID = "WIfI Name"  # Change this to your WiFi SSID
 PASSWORD = "WiFi Password"  # Change this to your WiFi password
-DEVICE_ID = "Philips_pico"  # Change this for each Pico W
+DEVICE_ID = "Name_Pico"  # Change this for each Pico W
 
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
