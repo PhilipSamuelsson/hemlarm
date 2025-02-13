@@ -95,11 +95,9 @@ npm install  # Install dependencies
 ### 6️⃣ **Set Up Frontend Environment Variables**
 Create a `.env.local` file inside the `frontend/` folder:
 ```bash
-touch .env.local
-```
-Add the following:
-```
+cat > .env.local << EOF
 NEXT_PUBLIC_API_URL=http://localhost:5000/api
+EOF
 ```
 
 ### 7️⃣ **Start the Frontend**
