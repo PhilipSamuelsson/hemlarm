@@ -3,16 +3,20 @@ from firebase_admin import credentials, db
 import json
 import os
 
-# 🔹 Load Firebase credentials from ENV
+# 🔹 Läs Firebase credentials från ENV
 firebase_credentials = os.getenv("FIREBASE_CREDENTIALS")
 
 if not firebase_credentials:
     raise FileNotFoundError("❌ Firebase Service Account not found in environment variables")
 
-# 🔹 Parse JSON from ENV
-cred = credentials.Certificate(json.loads(firebase_credentials))
+# 🔹 Konvertera JSON-sträng till Python-dictionary
+try:
+    cred_data = json.loads(firebase_credentials)
+    cred = credentials.Certificate(cred_data)
+except json.JSONDecodeError:
+    raise ValueError("❌ Invalid JSON format in FIREBASE_CREDENTIALS environment variable")
 
-# 🔹 Initialize Firebase with database URL
+# 🔹 Initiera Firebase
 firebase_admin.initialize_app(cred, {
     "databaseURL": "https://home-alarm-c3d76-default-rtdb.europe-west1.firebasedatabase.app/"
 })
