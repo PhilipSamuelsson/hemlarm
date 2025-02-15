@@ -12,8 +12,7 @@ load_dotenv()
 SERVICE_ACCOUNT_FILE = "serviceAccountKey.json"
 
 # 🔹 Flask API URL (ändra till din backend-URL)
-FLASK_URL = "https://hemlarm.onrender.com/motion_detected"
-
+FLASK_URL = "https://hemlarm.onrender.com/api/motion_detected"
 # 🔹 Initiera Firebase
 try:
     cred = credentials.Certificate(SERVICE_ACCOUNT_FILE)
