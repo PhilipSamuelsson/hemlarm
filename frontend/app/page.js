@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React, { useState, useEffect } from "react";
 
@@ -9,23 +9,31 @@ const Dashboard = () => {
   const [logs, setLogs] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(true);
 
-  // Fetch devices
+  console.log("API_URL:", API_URL); // Debugging API URL
+
+  // 🔹 Fetch devices
   useEffect(() => {
     const fetchDevices = async () => {
       try {
+        console.log("Fetching devices from:", `${API_URL}/devices`);
         const res = await fetch(`${API_URL}/devices`);
-        const data = await res.json();
 
+        if (!res.ok) {
+          throw new Error(`Failed to fetch devices: ${res.status} ${res.statusText}`);
+        }
+
+        const data = await res.json();
         console.log("API Devices Response:", data); // Debugging log
 
         if (Array.isArray(data)) {
           setDevices(data);
         } else if (typeof data === "object") {
-          // Convert object into an array of devices
-          setDevices(Object.entries(data).map(([id, details]) => ({
-            id,
-            ...details
-          })));
+          setDevices(
+            Object.entries(data).map(([id, details]) => ({
+              id,
+              ...details,
+            }))
+          );
         } else {
           setDevices([]); // Default to an empty array
         }
@@ -37,18 +45,24 @@ const Dashboard = () => {
     fetchDevices();
   }, []);
 
-  // Fetch logs
+  // 🔹 Fetch logs
   useEffect(() => {
     const fetchLogs = async () => {
       try {
+        console.log("Fetching logs from:", `${API_URL}/logs`);
         const res = await fetch(`${API_URL}/logs`);
-        const data = await res.json();
 
-        console.log("API Logs Response:", data); // Debugging log
+        if (!res.ok) {
+          throw new Error(`Failed to fetch logs: ${res.status} ${res.statusText}`);
+        }
+
+        const data = await res.json();
+        console.log("Fetched logs:", data); // Debugging log
 
         if (Array.isArray(data)) {
           setLogs(data);
         } else {
+          console.error("Unexpected API response for logs:", data);
           setLogs([]);
         }
       } catch (err) {
@@ -58,31 +72,38 @@ const Dashboard = () => {
       }
     };
 
-    
-
     fetchLogs();
   }, []);
 
-  // Toggle Alarm
-  const toggleAlarm = (id) => {
-    fetch(`${API_URL}/toggle_alarm/${id}`, { method: "POST" })
-      .then((res) => res.json())
-      .then((updatedDevice) => {
-        setDevices((prevDevices) =>
-          prevDevices.map((device) =>
-            device.id === updatedDevice.id ? { ...device, isActive: updatedDevice.isActive } : device
-          )
-        );
+  // 🔹 Toggle Alarm
+  const toggleAlarm = async (id) => {
+    try {
+      console.log(`Toggling alarm for device: ${id}`);
+      const res = await fetch(`${API_URL}/toggle_alarm/${id}`, {
+        method: "POST",
+      });
 
-        const newLog = {
-          timestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
-          message: `${updatedDevice.name} alarm ${
-            updatedDevice.isActive ? "activated" : "deactivated"
-          }`,
-        };
-        setLogs((prevLogs) => [newLog, ...prevLogs]);
-      })
-      .catch((err) => console.error("Error toggling alarm:", err));
+      if (!res.ok) {
+        throw new Error(`Failed to toggle alarm: ${res.status} ${res.statusText}`);
+      }
+
+      const updatedDevice = await res.json();
+      console.log("Updated device:", updatedDevice);
+
+      setDevices((prevDevices) =>
+        prevDevices.map((device) =>
+          device.id === updatedDevice.id ? { ...device, isActive: updatedDevice.isActive } : device
+        )
+      );
+
+      const newLog = {
+        timestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
+        message: `${updatedDevice.name} alarm ${updatedDevice.isActive ? "activated" : "deactivated"}`,
+      };
+      setLogs((prevLogs) => [newLog, ...prevLogs]);
+    } catch (err) {
+      console.error("Error toggling alarm:", err);
+    }
   };
 
   return (
@@ -95,10 +116,7 @@ const Dashboard = () => {
           <p className="text-gray-400">No devices connected</p>
         ) : (
           devices.map((device) => (
-            <div
-              key={device.id}
-              className="flex justify-between items-center p-2 border-b"
-            >
+            <div key={device.id} className="flex justify-between items-center p-2 border-b">
               <span>{device.name}</span>
               <button
                 className={`px-4 py-2 rounded-md ${
@@ -123,7 +141,8 @@ const Dashboard = () => {
           <ul>
             {logs.map((log, index) => (
               <li key={index} className="border-b p-2">
-                {log.timestamp} - {log.device_id} - {log.message}
+                {log.timestamp || "No timestamp"} - {log.device_id || "Unknown Device"} -{" "}
+                {log.message || "No message"}
               </li>
             ))}
           </ul>

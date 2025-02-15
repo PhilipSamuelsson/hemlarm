@@ -56,14 +56,28 @@ def get_devices():
     return jsonify(device_list), 200
 
 # 🔹 Get motion detection logs (returns the last 50 logs)
+# 🔹 Get motion detection logs (returns the last 50 logs)
 @api_bp.route("/logs", methods=["GET"])
 def get_logs():
-    logs = ref.child("logs").order_by_child("timestamp").limit_to_last(50).get() or {}
+    try:
+        logs = ref.child("logs").order_by_child("timestamp").limit_to_last(50).get()
+        if not logs:
+            return jsonify([]), 200  # Return empty list if no logs exist
 
-    logs_list = [{"id": key, **log} for key, log in logs.items()]
-    logs_list.sort(key=lambda x: x["timestamp"], reverse=True)
+        # Om logs är None eller något oväntat
+        if not isinstance(logs, dict):
+            print("⚠️ Unexpected logs data type:", type(logs), logs)
+            return jsonify({"error": "Unexpected logs format"}), 500
 
-    return jsonify(logs_list), 200
+        # Konvertera logs till lista och sortera dem
+        logs_list = [{"id": key, **log} for key, log in logs.items()]
+        logs_list.sort(key=lambda x: x.get("timestamp", ""), reverse=True)  # Sortera efter timestamp
+
+        return jsonify(logs_list), 200
+
+    except Exception as e:
+        print("🔥 Error fetching logs:", str(e))
+        return jsonify({"error": "Internal Server Error", "details": str(e)}), 500
 
 # 🔹 Receive motion detection from a Pico W
 @api_bp.route("/motion_detected", methods=["POST"])
