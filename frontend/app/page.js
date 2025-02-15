@@ -8,6 +8,8 @@ const Dashboard = () => {
   const [devices, setDevices] = useState([]);
   const [logs, setLogs] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const logsPerPage = 10;
 
   console.log("API_URL:", API_URL); // Debugging API URL
 
@@ -45,12 +47,12 @@ const Dashboard = () => {
     fetchDevices();
   }, []);
 
-  // 🔹 Fetch logs
+  // 🔹 Fetch logs with pagination
   useEffect(() => {
     const fetchLogs = async () => {
       try {
-        console.log("Fetching logs from:", `${API_URL}/logs`);
-        const res = await fetch(`${API_URL}/logs`);
+        console.log("Fetching logs from:", `${API_URL}/logs?_page=${currentPage}&_limit=${logsPerPage}&_sort=timestamp&_order=desc`);
+        const res = await fetch(`${API_URL}/logs?_page=${currentPage}&_limit=${logsPerPage}&_sort=timestamp&_order=desc`);
 
         if (!res.ok) {
           throw new Error(`Failed to fetch logs: ${res.status} ${res.statusText}`);
@@ -73,7 +75,7 @@ const Dashboard = () => {
     };
 
     fetchLogs();
-  }, []);
+  }, [currentPage]);
 
   // 🔹 Toggle Alarm
   const toggleAlarm = async (id) => {
@@ -138,14 +140,30 @@ const Dashboard = () => {
         ) : logs.length === 0 ? (
           <p className="text-gray-400">No activity recorded</p>
         ) : (
-          <ul>
-            {logs.map((log, index) => (
-              <li key={index} className="border-b p-2">
-                {log.timestamp || "No timestamp"} - {log.device_id || "Unknown Device"} -{" "}
-                {log.message || "No message"}
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul>
+              {logs.map((log, index) => (
+                <li key={index} className="border-b p-2">
+                  {log.timestamp || "No timestamp"} - {log.device_id || "Unknown Device"} - {log.message || "No message"}
+                </li>
+              ))}
+            </ul>
+            <div className="flex justify-between mt-2">
+              <button
+                className="px-4 py-2 bg-gray-700 rounded"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              >
+                Previous
+              </button>
+              <button
+                className="px-4 py-2 bg-gray-700 rounded"
+                onClick={() => setCurrentPage((prev) => prev + 1)}
+              >
+                Next
+              </button>
+            </div>
+          </>
         )}
       </div>
     </div>
