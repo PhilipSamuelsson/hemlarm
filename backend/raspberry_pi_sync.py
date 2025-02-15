@@ -23,7 +23,7 @@ try:
 except Exception as e:
     print(f"❌ Fel vid anslutning till Firebase: {e}")
 
-motion_ref = db.reference("motion")
+motion_ref = db.reference("logs")
 
 # 🔹 Funktion för att skicka data till Flask API
 def send_to_backend(data):
