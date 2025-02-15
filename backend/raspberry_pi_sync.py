@@ -12,7 +12,7 @@ firebase_admin.initialize_app(cred, {
 motion_ref = db.reference("motion")
 
 # 🔹 Flask API URL (Backend)
-FLASK_URL = "http://YOUR_BACKEND_IP:5000/motion_data"
+FLASK_URL = "https://hemlarm.onrender.com/motion_data"
 
 # 🔹 Funktion för att skicka data till Flask API
 def send_to_backend(data):
