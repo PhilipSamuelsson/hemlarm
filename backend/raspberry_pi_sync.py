@@ -13,6 +13,7 @@ SERVICE_ACCOUNT_FILE = "serviceAccountKey.json"
 
 # 🔹 Flask API URL (ändra till din backend-URL)
 FLASK_URL = "https://hemlarm.onrender.com/api/motion_detected"
+
 # 🔹 Initiera Firebase
 try:
     cred = credentials.Certificate(SERVICE_ACCOUNT_FILE)
@@ -23,7 +24,12 @@ try:
 except Exception as e:
     print(f"❌ Fel vid anslutning till Firebase: {e}")
 
-motion_ref = db.reference("logs")
+logs_ref = db.reference("logs")
+devices_ref = db.reference("devices")
+
+def is_recent(timestamp, threshold=30):
+    """ Kontrollera om en logg är nyare än threshold sekunder. """
+    return (time.time() - timestamp) < threshold
 
 # 🔹 Funktion för att skicka data till Flask API
 def send_to_backend(data):
@@ -39,14 +45,33 @@ def send_to_backend(data):
         print(f"❌ Fel vid skickning till Flask: {e}")
         return False
 
+# 🔹 Uppdatera enheters status till "disconnected" om de inte har uppdaterats nyligen
+def check_device_status():
+    current_time = time.time()
+    devices = devices_ref.get()
+    
+    if devices:
+        for device_id, device_info in devices.items():
+            last_seen = device_info.get("last_seen", 0)
+            if (current_time - last_seen) > 30:  # Ingen uppdatering på 30 sek
+                devices_ref.child(device_id).update({"status": "disconnected"})
+                print(f"🔴 Enhet {device_id} markerad som offline")
+
 # 🔹 Main loop för att hämta data från Firebase
 while True:
-    logs = motion_ref.get()
+    logs = logs_ref.get()
     
     if logs:
         for key, log in logs.items():
-            if send_to_backend(log):  # Om vi lyckas skicka, radera posten i Firebase
-                motion_ref.child(key).delete()
-                print(f"🗑️ Data raderad från Firebase: {key}")
+            if "timestamp" in log and is_recent(log["timestamp"]):
+                if send_to_backend(log):  # Om vi lyckas skicka, radera posten i Firebase
+                    try:
+                        logs_ref.child(key).delete()
+                        print(f"🗑️ Data raderad från Firebase: {key}")
+                    except Exception as e:
+                        print(f"❌ Misslyckades att radera {key} från Firebase: {e}")
+            else:
+                print(f"⚠️ Ignorerar gammal logg: {key}")
     
+    check_device_status()  # Kontrollera enheters status
     time.sleep(5)  # Vänta 5 sekunder innan vi hämtar ny data
