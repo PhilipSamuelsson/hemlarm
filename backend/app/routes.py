@@ -1,10 +1,14 @@
 from flask import Blueprint, jsonify, request
 import time
+import threading
 from firebase_config import ref  # Import Firebase reference
 from flask_cors import CORS  # Om du behöver CORS
 
 api_bp = Blueprint("api", __name__)
 CORS(api_bp)  # Aktivera CORS på alla endpoints om frontend ska nå backend
+
+# 🔹 Time before a device is marked as disconnected
+DISCONNECT_THRESHOLD = 30  # Adjust as needed
 
 # 🔹 Health Check Endpoint
 @api_bp.route("/health", methods=["GET"])
@@ -24,14 +28,19 @@ def register_device():
     # Check if device is already registered
     existing_device = ref.child("devices").child(device_id).get()
     if existing_device:
-        return jsonify({"status": "Device already registered", "device_id": device_id, "name": existing_device.get("name", device_id)}), 200
+        return jsonify({
+            "status": "Device already registered",
+            "device_id": device_id,
+            "name": existing_device.get("name", device_id)
+        }), 200
 
     # Store new device in Firebase
     ref.child("devices").child(device_id).set({
         "name": device_name,
         "status": "connected",
         "last_motion_distance": None,
-        "last_motion_time": None
+        "last_motion_time": None,
+        "last_seen": time.time()  # Track last activity
     })
 
     print(f"✅ New device registered: {device_id} ({device_name})")
@@ -40,7 +49,7 @@ def register_device():
 # 🔹 Get all connected devices
 @api_bp.route("/devices", methods=["GET"])
 def get_devices():
-    devices = ref.child("devices").get() or {}  # Fallback till tom dictionary om inget finns
+    devices = ref.child("devices").get() or {}
 
     device_list = [
         {
@@ -48,14 +57,14 @@ def get_devices():
             "name": details.get("name", device_id),
             "status": details.get("status", "unknown"),
             "last_motion_distance": details.get("last_motion_distance"),
-            "last_motion_time": details.get("last_motion_time")
+            "last_motion_time": details.get("last_motion_time"),
+            "last_seen": details.get("last_seen")
         }
         for device_id, details in devices.items()
     ]
     
     return jsonify(device_list), 200
 
-# 🔹 Get motion detection logs (returns the last 50 logs)
 # 🔹 Get motion detection logs (returns the last 50 logs)
 @api_bp.route("/logs", methods=["GET"])
 def get_logs():
@@ -64,14 +73,12 @@ def get_logs():
         if not logs:
             return jsonify([]), 200  # Return empty list if no logs exist
 
-        # Om logs är None eller något oväntat
         if not isinstance(logs, dict):
             print("⚠️ Unexpected logs data type:", type(logs), logs)
             return jsonify({"error": "Unexpected logs format"}), 500
 
-        # Konvertera logs till lista och sortera dem
         logs_list = [{"id": key, **log} for key, log in logs.items()]
-        logs_list.sort(key=lambda x: x.get("timestamp", ""), reverse=True)  # Sortera efter timestamp
+        logs_list.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
 
         return jsonify(logs_list), 200
 
@@ -95,16 +102,25 @@ def motion_detected():
     distance = data["distance"]
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
 
-    # Check if device exists before logging data
+    # Check if device exists before logging data, if not, auto-register
     device_ref = ref.child("devices").child(device_id)
     if not device_ref.get():
-        return jsonify({"error": f"Device '{device_id}' not registered."}), 404
-
-    # Update last motion data for the device
-    device_ref.update({
-        "last_motion_distance": distance,
-        "last_motion_time": timestamp
-    })
+        print(f"⚠️ Device '{device_id}' not found. Auto-registering...")
+        ref.child("devices").child(device_id).set({
+            "name": device_id,  # Default name if not provided
+            "status": "connected",
+            "last_motion_distance": distance,
+            "last_motion_time": timestamp,
+            "last_seen": time.time()
+        })
+    else:
+        # Update last motion data and last seen timestamp
+        device_ref.update({
+            "last_motion_distance": distance,
+            "last_motion_time": timestamp,
+            "last_seen": time.time(),  # Mark latest activity
+            "status": "connected"  # Reconnect device if previously marked as disconnected
+        })
 
     # Add log entry to Firebase
     log_entry = {
@@ -117,3 +133,20 @@ def motion_detected():
 
     print(f"🚨 [{timestamp}] Motion detected from {device_id}: {distance:.2f} cm")
     return jsonify({"status": "Motion recorded", "device_id": device_id, "distance": distance}), 201
+
+# 🔹 Background Task: Mark Inactive Devices as Disconnected
+def check_inactive_devices():
+    while True:
+        devices = ref.child("devices").get() or {}
+
+        current_time = time.time()
+        for device_id, details in devices.items():
+            last_seen = details.get("last_seen", 0)
+            if current_time - last_seen > DISCONNECT_THRESHOLD:
+                ref.child("devices").child(device_id).update({"status": "disconnected"})
+                print(f"⚠️ Device {device_id} marked as disconnected.")
+
+        time.sleep(30)  # Run every 30 seconds
+
+# 🔹 Start background thread
+threading.Thread(target=check_inactive_devices, daemon=True).start()
