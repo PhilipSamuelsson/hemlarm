@@ -98,7 +98,7 @@ npm install  # Install dependencies
 Create a `.env.local` file inside the `frontend/` folder:
 ```bash
 cat > .env.local << EOF
-NEXT_PUBLIC_API_URL=http://localhost:5000/api
+NEXT_PUBLIC_API_URL = https://hemlarm.onrender.com/api
 EOF
 ```
 
