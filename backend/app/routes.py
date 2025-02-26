@@ -11,7 +11,7 @@ devices = {}  # Stores connected devices
 logs = []  # Stores motion detection logs
 
 # 🔹 Time before a device is marked as disconnected (in seconds)
-DISCONNECT_THRESHOLD = 30  # Adjust as needed
+DISCONNECT_THRESHOLD = 30  #
 MAX_LOGS = 50  # Limit log storage to avoid memory overflow
 
 # 🔹 Health Check Endpoint
