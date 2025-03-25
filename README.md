@@ -29,11 +29,11 @@ graph TD
 ```
 ## Tech stack
 
-- ✅ Frontend – React (med Next.js) eller Vue (med Nuxt.js)
-- ✅ Backend – Python (FastAPI eller Flask) för API & datahantering
-- ✅ Mikrokontroller – Python (MicroPython) på Raspberry Pi Pico W
-- ✅ Gateway & Server – Python (Raspberry Pi 3) med MQTT eller WebSockets
-- ✅ Databas – SQLite, PostgreSQL eller Firebase (beroende på behov)
+- ✅ Frontend – React (med Next.js)
+- ✅ Backend – Python (Flask) för API & datahantering
+- ✅ Mikrokontroller – C/C++ (Embedded C) på Raspberry Pi Pico W
+- ✅ Fog-enhet – C (Raspberry Pi Zero 2 W) med MQTT
+- ✅ Databas – SQLite
 
 
 # IoT Alarm Dashboard
