@@ -2,19 +2,19 @@
 
 ```mermaid
 graph TD
-    subgraph "💡 Rörelsedetektor (Pico W)"
+    subgraph "💡 Rörelsedetektor"
         A[Pico W<br/>C/C++]
         A -->|Ultraljudssensor<br/>mäter avstånd| B[Sensorvärde]
     end
 
-    subgraph "📦 FOG-enhet (Pi Zero 2 W)"
-        C[Pi Zero 2 W<br/>Python / MQTT Broker]
+    subgraph "📦 FOG-enhet "
+        C[Pi Zero 2 W <Br/> MQTT Broker]
         B -->|MQTT / WiFi| C
     end
-
-    subgraph "🧠 Backend (Flask API)"
-        D[Flask Server<br/>API]
+    subgraph " Backend "
+        D[Flask Server<Br/>API]
         C -->|HTTP POST / MQTT| D
+        D -->|Skicka SMS| G[SMS-Tjänst]
     end
 
     subgraph "🗄️ Databas"
