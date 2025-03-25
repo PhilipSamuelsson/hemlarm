@@ -1,62 +1,31 @@
 # Plan
 
 ```mermaid
-graph TD;
-    
-    subgraph Frontend_NextJS
-        UI[User Interface]
-        UI -->|Fetch API| API_Frontend
+graph TD
+    subgraph "💡 Rörelsedetektor (Pico W)"
+        A[Pico W<br/>C/C++]
+        A -->|Ultraljudssensor<br/>mäter avstånd| B[Sensorvärde]
     end
 
-    subgraph Backend_Flask
-        API_Frontend[REST API]
-        API_Frontend -->|GET/POST| Devices_Endpoint[/api/devices/]
-        API_Frontend -->|GET| Logs_Endpoint[/api/logs/]
-        API_Frontend -->|POST| Toggle_Alarm_Endpoint[api/toggle_alarm/:id]
-        DB[(Database)]
-        Devices_Endpoint -->|Read/Write| DB
-        Logs_Endpoint -->|Read| DB
-    end
-    
-    subgraph IoT_Edge_Devices
-        RPi3["Raspberry Pi 3 (Gateway)"]
-        Pico1["Raspberry Pi Pico W #1"]
-        Pico2["Raspberry Pi Pico W #2"]
-        PicoN["Raspberry Pi Pico W #N"]
+    subgraph "📦 FOG-enhet (Pi Zero 2 W)"
+        C[Pi Zero 2 W<br/>Python / MQTT Broker]
+        B -->|MQTT / WiFi| C
     end
 
-    UI -->|API Requests| API_Frontend
-    API_Frontend -->|Control| RPi3
-    RPi3 -->|MQTT/WebSockets| Pico1
-    RPi3 -->|MQTT/WebSockets| Pico2
-    RPi3 -->|MQTT/WebSockets| PicoN
-    Pico1 -->|Motion Data| RPi3
-    Pico2 -->|Motion Data| RPi3
-    PicoN -->|Motion Data| RPi3
-
-    subgraph Notifications
-        Notifier[Notification System]
-        Notifier -->|Push Notification| Phone["User's Phone"]
-        Notifier -->|Email Alert| Email["User's Email"]
+    subgraph "🧠 Backend (Flask API)"
+        D[Flask Server<br/>API]
+        C -->|HTTP POST / MQTT| D
     end
 
-    API_Frontend -->|Trigger Notification| Notifier
-```
-# Leverans
-
-```mermaid
-graph TD;
-    subgraph Sensornoder
-        PIR1["Rörelsesensor 1"] -->|"Upptäcker rörelse"| Pico1["Raspberry Pi Pico W 1"];
-        PIR2["Rörelsesensor 2"] -->|"Upptäcker rörelse"| Pico2["Raspberry Pi Pico W 2"];
-        PIR3["Rörelsesensor 3"] -->|"Upptäcker rörelse"| Pico3["Raspberry Pi Pico W 3"];
+    subgraph "🗄️ Databas"
+        E[(SQL Database)]
+        D -->|Spara data| E
     end
-    
-    Pico1 -->|"HTTP"| Flask["Flask Backend Server"];
-    Pico2 -->|"HTTP"| Flask;
-    Pico3 -->|"HTTP"| Flask;
-    
-    Flask -->|"HTTP"| Frontend["Frontend"];
+
+    subgraph "🌍 Webapp"
+        F[Next.js Frontend]
+        F -->|GET devices / logs| D
+    end
 ```
 ## Tech stack
 
