@@ -16,8 +16,8 @@ DISCONNECT_THRESHOLD = 30
 MAX_LOGS = 50  # Limit log storage to avoid memory overflow
 
 # 🔹 Pushover inställningar (byt ut till dina egna nycklar)
-PUSHOVER_TOKEN = "uiku12gm15jk5namtmv5td1vnttuiv"
-PUSHOVER_USER = "ae65hr6iroswx6j1srwgqhm3qncs77"
+PUSHOVER_USER = "uiku12gm15jk5namtmv5td1vnttuiv"     # Din *user key*
+PUSHOVER_TOKEN = "ae65hr6iroswx6j1srwgqhm3qncs77"    # Din *application token*
 
 # 🔹 Health Check Endpoint
 @api_bp.route("/health", methods=["GET"])
