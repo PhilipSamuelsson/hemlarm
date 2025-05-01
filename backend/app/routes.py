@@ -84,9 +84,9 @@ def device_status():
             "last_seen": time.time()
         })
         devices[device_id]["name"] = device_name # update name if sent
-#test---------------------------------------------------------------------------------------------------- 
     print(f"🔄 Device {device_id} status updated to: {status}")
     return jsonify({"status": f"Device status updated to {status}", "device_id": device_id}), 200
+#test---------------------------------------------------------------------------------------------------- 
 # 🔹 Get all connected devices
 @api_bp.route("/devices", methods=["GET"])
 def get_devices():
