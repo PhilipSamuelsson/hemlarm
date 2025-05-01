@@ -2,7 +2,7 @@
 
 ```mermaid
 graph TD;
-    
+
     subgraph Frontend_NextJS
         UI[User Interface]
         UI -->|Fetch API| API_Frontend
@@ -17,7 +17,7 @@ graph TD;
         Devices_Endpoint -->|Read/Write| DB
         Logs_Endpoint -->|Read| DB
     end
-    
+
     subgraph IoT_Edge_Devices
         RPi3["Raspberry Pi 3 (Gateway)"]
         Pico1["Raspberry Pi Pico W #1"]
@@ -42,6 +42,7 @@ graph TD;
 
     API_Frontend -->|Trigger Notification| Notifier
 ```
+
 # Leverans
 
 ```mermaid
@@ -51,13 +52,14 @@ graph TD;
         PIR2["Rörelsesensor 2"] -->|"Upptäcker rörelse"| Pico2["Raspberry Pi Pico W 2"];
         PIR3["Rörelsesensor 3"] -->|"Upptäcker rörelse"| Pico3["Raspberry Pi Pico W 3"];
     end
-    
+
     Pico1 -->|"HTTP"| Flask["Flask Backend Server"];
     Pico2 -->|"HTTP"| Flask;
     Pico3 -->|"HTTP"| Flask;
-    
+
     Flask -->|"HTTP"| Frontend["Frontend"];
 ```
+
 ## Tech stack
 
 - ✅ Frontend – React (med Next.js) eller Vue (med Nuxt.js)
@@ -66,12 +68,12 @@ graph TD;
 - ✅ Gateway & Server – Python (Raspberry Pi 3) med MQTT eller WebSockets
 - ✅ Databas – SQLite, PostgreSQL eller Firebase (beroende på behov)
 
-
 # IoT Alarm Dashboard
 
 This project is an IoT-based alarm system with a Next.js frontend and a Flask backend. The system allows users to monitor and control alarm devices in multiple households via a web interface.
 
 ## 🚀 Features
+
 - View connected alarm devices
 - Toggle alarm on/off for each device
 - View activity logs
@@ -83,19 +85,23 @@ This project is an IoT-based alarm system with a Next.js frontend and a Flask ba
 Follow these steps to set up the project for the first time.
 
 ### 1️⃣ **Clone the Repository**
+
 ```bash
 git clone [https://github.com/hemlarm.git](https://github.com/PhilipSamuelsson/hemlarm.git)
 cd hemlarm
 ```
 
 ### 2️⃣ **Set Up Frontend (Next.js)**
+
 ```bash
 cd ../frontend
 npm install  # Install dependencies
 ```
 
 ### 3️⃣ **Set Up Frontend Environment Variables**
+
 Create a `.env.local` file inside the `frontend/` folder:
+
 ```bash
 cat > .env.local << EOF
 NEXT_PUBLIC_API_URL = https://hemlarm.onrender.com/api
@@ -103,6 +109,7 @@ EOF
 ```
 
 ### 4️⃣ **Start the Frontend**
+
 ```bash
 npm run dev
 ```
@@ -112,21 +119,24 @@ npm run dev
 ## 🔄 Continuing Development
 
 ### **Starting the Frontend**
+
 ```bash
 cd frontend
 npm run dev  # Start Next.js frontend
 ```
 
 ### **Stopping the Application**
+
 - **Frontend:** Press `CTRL+C` in the terminal.
+
 ---
 
+## 🧪 Testing the API
 
-## 🧪 Testing the API 
-The frontend should now be running at: **http://localhost:3000** 
+The frontend should now be running at: **http://localhost:3000**
 
-Open a browser or Postman and visit: 
-https://hemlarm.onrender.com/api/devices 
+Open a browser or Postman and visit:
+https://hemlarm.onrender.com/api/devices
 and
 https://hemlarm.onrender.com/api/logs
 

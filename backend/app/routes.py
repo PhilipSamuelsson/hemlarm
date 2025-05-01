@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 import time
 import threading
+import requests
 from flask_cors import CORS
 
 api_bp = Blueprint("api", __name__)
@@ -11,8 +12,12 @@ devices = {}  # Stores connected devices
 logs = []  # Stores motion detection logs
 
 # 🔹 Time before a device is marked as disconnected (in seconds)
-DISCONNECT_THRESHOLD = 30  #
+DISCONNECT_THRESHOLD = 30
 MAX_LOGS = 50  # Limit log storage to avoid memory overflow
+
+# 🔹 Pushover inställningar (byt ut till dina egna nycklar)
+PUSHOVER_TOKEN = "uiku12gm15jk5namtmv5td1vnttuiv"
+PUSHOVER_USER = "ae65hr6iroswx6j1srwgqhm3qncs77"
 
 # 🔹 Health Check Endpoint
 @api_bp.route("/health", methods=["GET"])
@@ -31,7 +36,11 @@ def register_device():
 
     # Check if device already exists
     if device_id in devices:
-        return jsonify({"status": "Device already registered", "device_id": device_id, "name": devices[device_id]["name"]}), 200
+        return jsonify({
+            "status": "Device already registered",
+            "device_id": device_id,
+            "name": devices[device_id]["name"]
+        }), 200
 
     # Register new device
     devices[device_id] = {
@@ -43,7 +52,11 @@ def register_device():
     }
 
     print(f"✅ New device registered: {device_id} ({device_name})")
-    return jsonify({"status": "Device registered", "device_id": device_id, "name": device_name}), 201
+    return jsonify({
+        "status": "Device registered",
+        "device_id": device_id,
+        "name": device_name
+    }), 201
 
 # 🔹 Get all connected devices
 @api_bp.route("/devices", methods=["GET"])
@@ -93,18 +106,35 @@ def motion_detected():
             "last_motion_distance": distance,
             "last_motion_time": timestamp,
             "last_seen": time.time(),
-            "status": "connected"  # Reactivate if previously disconnected
+            "status": "connected"
         })
 
     # Store motion log
-    logs.append({
+    log_entry = {
         "timestamp": timestamp,
         "device_id": device_id,
         "distance": distance,
         "message": f"Motion detected ({distance:.2f} cm)"
-    })
+    }
+    logs.append(log_entry)
     
     print(f"🚨 [{timestamp}] Motion detected from {device_id}: {distance:.2f} cm")
+
+    # 🔔 Skicka Pushover-notis
+    try:
+        r = requests.post("https://api.pushover.net/1/messages.json", data={
+            "token": PUSHOVER_TOKEN,
+            "user": PUSHOVER_USER,
+            "title": f"Larm från {device_id}",
+            "message": f"Rörelse upptäckt: {distance:.2f} cm vid {timestamp}"
+        })
+        if r.status_code == 200:
+            print("📲 Notis skickad!")
+        else:
+            print(f"❌ Kunde inte skicka notis: {r.text}")
+    except Exception as e:
+        print(f"❌ Fel vid försök att skicka notis: {e}")
+
     return jsonify({"status": "Motion recorded", "device_id": device_id, "distance": distance}), 201
 
 # 🔹 Background Task: Mark Inactive Devices as Disconnected
