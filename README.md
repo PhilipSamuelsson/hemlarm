@@ -6,16 +6,15 @@ graph TD;
     subgraph Frontend_NextJS
         UI[User Interface]
         UI -->|Fetch API| API_Frontend
+graph TD
+    subgraph "💡 Rörelsedetektor"
+        A[Pico W<br/>C/C++]
+        A -->|Ultraljudssensor<br/>mäter avstånd| B[Sensorvärde]
     end
 
-    subgraph Backend_Flask
-        API_Frontend[REST API]
-        API_Frontend -->|GET/POST| Devices_Endpoint[/api/devices/]
-        API_Frontend -->|GET| Logs_Endpoint[/api/logs/]
-        API_Frontend -->|POST| Toggle_Alarm_Endpoint[api/toggle_alarm/:id]
-        DB[(Database)]
-        Devices_Endpoint -->|Read/Write| DB
-        Logs_Endpoint -->|Read| DB
+    subgraph "📦 FOG-enhet "
+        C[Pi Zero 2 W <Br/> MQTT Broker]
+        B -->|MQTT / WiFi| C
     end
 
     subgraph IoT_Edge_Devices
@@ -23,21 +22,15 @@ graph TD;
         Pico1["Raspberry Pi Pico W #1"]
         Pico2["Raspberry Pi Pico W #2"]
         PicoN["Raspberry Pi Pico W #N"]
+    subgraph " Backend "
+        D[Flask Server<Br/>API]
+        C -->|HTTP POST / MQTT| D
+        D -->|Skicka SMS| G[SMS-Tjänst]
     end
 
-    UI -->|API Requests| API_Frontend
-    API_Frontend -->|Control| RPi3
-    RPi3 -->|MQTT/WebSockets| Pico1
-    RPi3 -->|MQTT/WebSockets| Pico2
-    RPi3 -->|MQTT/WebSockets| PicoN
-    Pico1 -->|Motion Data| RPi3
-    Pico2 -->|Motion Data| RPi3
-    PicoN -->|Motion Data| RPi3
-
-    subgraph Notifications
-        Notifier[Notification System]
-        Notifier -->|Push Notification| Phone["User's Phone"]
-        Notifier -->|Email Alert| Email["User's Email"]
+    subgraph "🗄️ Databas"
+        E[(SQL Database)]
+        D -->|Spara data| E
     end
 
     API_Frontend -->|Trigger Notification| Notifier
@@ -58,15 +51,19 @@ graph TD;
     Pico3 -->|"HTTP"| Flask;
 
     Flask -->|"HTTP"| Frontend["Frontend"];
+    subgraph "🌍 Webapp"
+        F[Next.js Frontend]
+        F -->|GET devices / logs| D
+    end
 ```
 
 ## Tech stack
 
-- ✅ Frontend – React (med Next.js) eller Vue (med Nuxt.js)
-- ✅ Backend – Python (FastAPI eller Flask) för API & datahantering
-- ✅ Mikrokontroller – Python (MicroPython) på Raspberry Pi Pico W
-- ✅ Gateway & Server – Python (Raspberry Pi 3) med MQTT eller WebSockets
-- ✅ Databas – SQLite, PostgreSQL eller Firebase (beroende på behov)
+- ✅ Frontend – React (med Next.js)
+- ✅ Backend – Python (Flask) för API & datahantering
+- ✅ Mikrokontroller – C/C++ (Embedded C) på Raspberry Pi Pico W
+- ✅ Fog-enhet – C (Raspberry Pi Zero 2 W) med MQTT
+- ✅ Databas – SQLite
 
 # IoT Alarm Dashboard
 
