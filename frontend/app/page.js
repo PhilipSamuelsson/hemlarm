@@ -107,7 +107,39 @@ const Dashboard = () => {
       console.error("Error toggling alarm:", err);
     }
   };
+  //new online status and button for later use. 
+  <div className="p-8 bg-gray-900 min-h-screen text-white">
+      <h1 className="text-2xl mb-4">IoT Alarm Dashboard</h1>
 
+      <div className="p-4 border rounded-md bg-gray-800 text-white shadow-lg">
+        <h2 className="text-xl mb-2">Connected Devices</h2>
+        {devices.length === 0 ? (
+          <p className="text-gray-400">No devices connected</p>
+        ) : (
+          devices.map((device) => (
+            <div key={device.id} className="flex justify-between items-center p-2 border-b">
+              <span>{device.name}</span>
+              <div className="flex items-center">
+                <div
+                  className={`w-3 h-3 rounded-full mr-2 ${
+                    device.status === "online" ? "bg-green-500" : "bg-red-500"
+                  }`}
+                />
+                <span className="text-sm text-gray-400">{device.status === "online" ? "Online" : "Offline"}</span>
+                {/* You can optionally keep the button for manual alarm control */}
+                <button
+                  className={`ml-4 px-4 py-2 rounded-md ${
+                    device.isActive ? "bg-red-500" : "bg-green-500"
+                  }`}
+                  onClick={() => toggleAlarm(device.id)}
+                >
+                  {device.isActive ? "Turn Off Alarm" : "Turn On Alarm"}
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
   return (
     <div className="p-8 bg-gray-900 min-h-screen text-white">
       <h1 className="text-2xl mb-4">IoT Alarm Dashboard</h1>
@@ -133,7 +165,7 @@ const Dashboard = () => {
         )}
       </div>
 
-      <div className="p-4 border rounded-md bg-gray-800 text-white shadow-lg mt-4">
+     <div className="p-4 border rounded-md bg-gray-800 text-white shadow-lg mt-4">
         <h2 className="text-xl mb-2">Activity Log</h2>
         {loadingLogs ? (
           <p className="text-gray-400">Loading logs...</p>
