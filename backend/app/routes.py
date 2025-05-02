@@ -3,6 +3,8 @@ import time
 import threading
 import requests
 from flask_cors import CORS
+from datetime import datetime
+import pytz
 
 api_bp = Blueprint("api", __name__)
 CORS(api_bp)  # Enable CORS for frontend access
@@ -117,7 +119,9 @@ def motion_detected():
 
     device_id = data["device_id"]
     distance = data["distance"]
-    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+
+    cest = pytz.timezone('Europe/Stockholm')  
+    timestamp_cest = datetime.now(cest).strftime("%Y-%m-%d %H:%M:%S")
 
     # Auto-register device if it doesn't exist
     if device_id not in devices:
@@ -126,21 +130,21 @@ def motion_detected():
             "name": device_id,
             "status": "connected",
             "last_motion_distance": distance,
-            "last_motion_time": timestamp,
+            "last_motion_time": timestamp_cest,
             "last_seen": time.time()
         }
     else:
         # Update device status
         devices[device_id].update({
             "last_motion_distance": distance,
-            "last_motion_time": timestamp,
+            "last_motion_time": timestamp_cest,
             "last_seen": time.time(),
             "status": "connected"
         })
 
     # Store motion log
     log_entry = {
-        "timestamp": timestamp,
+        "timestamp": timestamp_cest,
         "device_id": device_id,
         "distance": distance,
         "message": f"Motion detected ({distance:.2f} cm)"
@@ -155,7 +159,7 @@ def motion_detected():
             "token": PUSHOVER_TOKEN,
             "user": PUSHOVER_USER,
             "title": f"Larm från {device_id}",
-            "message": f"Rörelse upptäckt: {distance:.2f} cm vid {timestamp}"
+            "message": f"Rörelse upptäckt: {distance:.2f} cm vid {timestamp_cest}"
         })
         if r.status_code == 200:
             print("📲 Notis skickad!")
