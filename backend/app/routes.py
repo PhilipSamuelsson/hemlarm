@@ -91,6 +91,22 @@ def device_status():
     print(f"🔄 Device {device_id} status updated to: {status}")
     return jsonify({"status": f"Device status updated to {status}", "device_id": device_id}), 200
 
+# 🔹 Get single device status
+@api_bp.route("/device_status/<device_id>", methods=["GET"])
+def get_device_status(device_id):
+    device = devices.get(device_id)
+    if not device:
+        return jsonify({"error": f"No device found with ID '{device_id}'"}), 404
+
+    return jsonify({
+        "device_id": device_id,
+        "name": device["name"],
+        "status": device["status"],
+        "last_seen": device["last_seen"],
+        "last_motion_time": device["last_motion_time"],
+        "last_motion_distance": device["last_motion_distance"]
+    }), 200
+
 # 🔹 Get all devices
 @api_bp.route("/devices", methods=["GET"])
 def get_devices():
@@ -111,41 +127,11 @@ def get_devices():
 def get_logs():
     return jsonify(logs[-MAX_LOGS:]), 200
 
-# Device Status endpoint
-@api_bp.route("/device_status", methods=["POST"])
-def device_status():
-    data = request.get_json()
-    if not data or "device_id" not in data or "status" not in data:
-        return jsonify({"error": "Invalid request. Missing 'device_id' or 'status'."}), 400
-
-    device_id = data["device_id"]
-    status = data["status"]
-    device_name = data.get("name", device_id)  # update name
-
-    if device_id not in devices:
-        print(f"⚠️ Device '{device_id}' not found. Auto-registering with status...")
-        devices[device_id] = {
-            "name": device_name,
-            "status": status,
-            "last_motion_distance": None,
-            "last_motion_time": None,
-            "last_seen": time.time()
-        }
-    else:
-        devices[device_id].update({
-            "status": status,
-            "last_seen": time.time()
-        })
-        devices[device_id]["name"] = device_name # update name if sent
-#test---------------------------------------------------------------------------------------------------- 
-    print(f"🔄 Device {device_id} status updated to: {status}")
-    return jsonify({"status": f"Device status updated to {status}", "device_id": device_id}), 200
-
 # 🔹 Motion detected
 @api_bp.route("/motion_detected", methods=["POST"])
 def motion_detected():
     data = request.get_json()
-    
+
     if not data or "device_id" not in data or "distance" not in data:
         return jsonify({"error": "Missing required fields."}), 400
 
@@ -153,11 +139,9 @@ def motion_detected():
     distance = data["distance"]
     alarm_active = data.get("alarm_active", False)
 
-    # Skapa tidsstämpel i svensk tid
-    cest = pytz.timezone('Europe/Stockholm')  
+    cest = pytz.timezone('Europe/Stockholm')
     timestamp_cest = datetime.now(cest).strftime("%Y-%m-%d %H:%M:%S")
 
-    # Auto-registrera om enhet saknas
     if device_id not in devices:
         devices[device_id] = {
             "name": device_id,
@@ -174,23 +158,6 @@ def motion_detected():
             "status": "connected"
         })
 
-
-# 🔹 Get device status
-@api_bp.route("/device_status_list", methods=["GET"])
-def get_all_device_statuses():
-    return jsonify([
-        {
-            "device_id": device_id,
-            "name": device["name"],
-            "status": device["status"],
-            "last_seen": device["last_seen"],
-            "last_motion_time": device["last_motion_time"],
-            "last_motion_distance": device["last_motion_distance"]
-        }
-        for device_id, device in devices.items()
-    ]), 200
-
-    # Logga rörelse
     log_entry = {
         "timestamp": timestamp_cest,
         "device_id": device_id,
@@ -202,7 +169,6 @@ def get_all_device_statuses():
 
     print(f"🚨 [{timestamp_cest}] Motion from {device_id}: {distance:.2f} cm (active={alarm_active})")
 
-    # Skicka Pushover endast om alarm_active är True
     if alarm_active:
         try:
             for user in PUSHOVER_USERS:
@@ -224,6 +190,22 @@ def get_all_device_statuses():
         "device_id": device_id,
         "distance": distance
     }), 201
+
+# 🔹 Get all device statuses
+@api_bp.route("/device_status_list", methods=["GET"])
+def get_all_device_statuses():
+    return jsonify([
+        {
+            "device_id": device_id,
+            "name": device["name"],
+            "status": device["status"],
+            "last_seen": device["last_seen"],
+            "last_motion_time": device["last_motion_time"],
+            "last_motion_distance": device["last_motion_distance"]
+        }
+        for device_id, device in devices.items()
+    ]), 200
+
 # 🔹 Background thread: mark devices as disconnected
 def check_inactive_devices():
     while True:
