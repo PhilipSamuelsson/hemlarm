@@ -50,25 +50,6 @@ const Dashboard = () => {
     fetchLogs();
   }, [currentPage]);
 
-  // 🔹 Toggle Alarm
-  const toggleAlarm = async (id) => {
-    try {
-      const res = await fetch(`${API_URL}/toggle_alarm/${id}`, { method: "POST" });
-      if (!res.ok) throw new Error(`Failed to toggle alarm`);
-      const updatedDevice = await res.json();
-      setDevices((prev) =>
-        prev.map((d) => (d.id === updatedDevice.id ? { ...d, isActive: updatedDevice.isActive } : d))
-      );
-      const newLog = {
-        timestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
-        message: `${updatedDevice.name} alarm ${updatedDevice.isActive ? "activated" : "deactivated"}`,
-      };
-      setLogs((prevLogs) => [newLog, ...prevLogs]);
-    } catch (err) {
-      console.error("Error toggling alarm:", err);
-    }
-  };
-
   return (
     <div className="p-8 bg-gray-900 min-h-screen text-white">
       <h1 className="text-2xl mb-4">IoT Alarm Dashboard</h1>
@@ -82,24 +63,14 @@ const Dashboard = () => {
             <div key={device.id} className="flex justify-between items-center p-2 border-b">
               <span>{device.name}</span>
               <div className="flex items-center">
-              
-              {//  🔹 Online status indicator (temporarily disabled) 
-}
                 <div
                   className={`w-3 h-3 rounded-full mr-2 ${
                     device.status === "online" ? "bg-green-500" : "bg-red-500"
                   }`}
                 />
-                <span className="text-sm text-gray-400">{device.status === "online" ? "Online" : "Offline"}</span>
-                
-                <button
-                  className={`ml-4 px-4 py-2 rounded-md ${
-                    device.isActive ? "bg-red-500" : "bg-green-500"
-                  }`}
-                  onClick={() => toggleAlarm(device.id)}
-                >
-                  {device.isActive ? "Turn Off Alarm" : "Turn On Alarm"}
-                </button>
+                <span className="text-sm text-gray-400">
+                  {device.status === "online" ? "Online" : "Offline"}
+                </span>
               </div>
             </div>
           ))
@@ -117,7 +88,8 @@ const Dashboard = () => {
             <ul>
               {logs.map((log, index) => (
                 <li key={index} className="border-b p-2">
-                  {log.timestamp || "No timestamp"} - {log.device_id || "Unknown Device"} - {log.message || "No message"}
+                  {log.timestamp || "No timestamp"} - {log.device_id || "Unknown Device"} -{" "}
+                  {log.message || "No message"}
                 </li>
               ))}
             </ul>
