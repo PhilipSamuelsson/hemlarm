@@ -115,17 +115,20 @@ def get_logs():
 @api_bp.route("/motion_detected", methods=["POST"])
 def motion_detected():
     data = request.get_json()
+    
     if not data or "device_id" not in data or "distance" not in data:
         return jsonify({"error": "Missing required fields."}), 400
 
     device_id = data["device_id"]
     distance = data["distance"]
+    alarm_active = data.get("alarm_active", False)
 
-    cest = pytz.timezone('Europe/Stockholm')
+    # Skapa tidsstämpel i svensk tid
+    cest = pytz.timezone('Europe/Stockholm')  
     timestamp_cest = datetime.now(cest).strftime("%Y-%m-%d %H:%M:%S")
 
+    # Auto-registrera om enhet saknas
     if device_id not in devices:
-        print(f"⚠️ Auto-registering device {device_id}")
         devices[device_id] = {
             "name": device_id,
             "status": "connected",
@@ -141,34 +144,40 @@ def motion_detected():
             "status": "connected"
         })
 
+    # Logga rörelse
     log_entry = {
         "timestamp": timestamp_cest,
         "device_id": device_id,
         "distance": distance,
-        "message": f"Motion detected ({distance:.2f} cm)"
+        "alarm_active": alarm_active,
+        "message": f"Rörelse: {distance:.2f} cm ({'aktivt larm' if alarm_active else 'passivt'})"
     }
     logs.append(log_entry)
 
-    print(f"🚨 [{timestamp_cest}] Motion detected from {device_id}: {distance:.2f} cm")
+    print(f"🚨 [{timestamp_cest}] Motion from {device_id}: {distance:.2f} cm (active={alarm_active})")
 
-    # 🔔 Skicka Pushover-notis till alla användare
-    for user_key in PUSHOVER_USERS:
+    # Skicka Pushover endast om alarm_active är True
+    if alarm_active:
         try:
-            r = requests.post("https://api.pushover.net/1/messages.json", data={
-                "token": PUSHOVER_TOKEN,
-                "user": user_key,
-                "title": f"Larm från {device_id}",
-                "message": f"Rörelse upptäckt: {distance:.2f} cm vid {timestamp_cest}"
-            })
-            if r.status_code == 200:
-                print(f"📲 Notis skickad till {user_key}!")
-            else:
-                print(f"❌ Kunde inte skicka notis till {user_key}: {r.text}")
+            for user in PUSHOVER_USERS:
+                r = requests.post("https://api.pushover.net/1/messages.json", data={
+                    "token": PUSHOVER_TOKEN,
+                    "user": user,
+                    "title": f"Larm från {device_id}",
+                    "message": f"Rörelse: {distance:.2f} cm vid {timestamp_cest}"
+                })
+                if r.status_code == 200:
+                    print("📲 Notis skickad!")
+                else:
+                    print(f"❌ Kunde inte skicka notis: {r.text}")
         except Exception as e:
-            print(f"❌ Fel vid försök att skicka notis till {user_key}: {e}")
+            print(f"❌ Fel vid Pushover: {e}")
 
-    return jsonify({"status": "Motion recorded", "device_id": device_id, "distance": distance}), 201
-
+    return jsonify({
+        "status": "Motion recorded",
+        "device_id": device_id,
+        "distance": distance
+    }), 201
 # 🔹 Background thread: mark devices as disconnected
 def check_inactive_devices():
     while True:
