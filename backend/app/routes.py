@@ -21,7 +21,7 @@ MAX_LOGS = 50
 PUSHOVER_TOKEN = "ae65hr6iroswx6j1srwgqhm3qncs77"  # Application token
 PUSHOVER_USERS = [
     "uiku12gm15jk5namtmv5td1vnttuiv",
-    # Lägg till fler användarnycklar här
+    "u1s3rfg1knys87gtsbom6v6oyjkhx1",    # Lägg till fler användarnycklar här
 ]
 
 # 🔹 Health check
