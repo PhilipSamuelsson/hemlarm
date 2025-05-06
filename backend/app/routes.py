@@ -111,6 +111,36 @@ def get_devices():
 def get_logs():
     return jsonify(logs[-MAX_LOGS:]), 200
 
+# Device Status endpoint
+@api_bp.route("/device_status", methods=["POST"])
+def device_status():
+    data = request.get_json()
+    if not data or "device_id" not in data or "status" not in data:
+        return jsonify({"error": "Invalid request. Missing 'device_id' or 'status'."}), 400
+
+    device_id = data["device_id"]
+    status = data["status"]
+    device_name = data.get("name", device_id)  # update name
+
+    if device_id not in devices:
+        print(f"⚠️ Device '{device_id}' not found. Auto-registering with status...")
+        devices[device_id] = {
+            "name": device_name,
+            "status": status,
+            "last_motion_distance": None,
+            "last_motion_time": None,
+            "last_seen": time.time()
+        }
+    else:
+        devices[device_id].update({
+            "status": status,
+            "last_seen": time.time()
+        })
+        devices[device_id]["name"] = device_name # update name if sent
+#test---------------------------------------------------------------------------------------------------- 
+    print(f"🔄 Device {device_id} status updated to: {status}")
+    return jsonify({"status": f"Device status updated to {status}", "device_id": device_id}), 200
+
 # 🔹 Motion detected
 @api_bp.route("/motion_detected", methods=["POST"])
 def motion_detected():
@@ -143,6 +173,7 @@ def motion_detected():
             "last_seen": time.time(),
             "status": "connected"
         })
+
 
     # Logga rörelse
     log_entry = {

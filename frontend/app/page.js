@@ -82,15 +82,16 @@ const Dashboard = () => {
             <div key={device.id} className="flex justify-between items-center p-2 border-b">
               <span>{device.name}</span>
               <div className="flex items-center">
-                {/*
-                🔹 Online status indicator (temporarily disabled)
+              
+              {//  🔹 Online status indicator (temporarily disabled) 
+}
                 <div
                   className={`w-3 h-3 rounded-full mr-2 ${
                     device.status === "online" ? "bg-green-500" : "bg-red-500"
                   }`}
                 />
                 <span className="text-sm text-gray-400">{device.status === "online" ? "Online" : "Offline"}</span>
-                */}
+                
                 <button
                   className={`ml-4 px-4 py-2 rounded-md ${
                     device.isActive ? "bg-red-500" : "bg-green-500"
