@@ -3,6 +3,8 @@ import time
 import threading
 import requests
 from flask_cors import CORS
+from datetime import datetime
+import pytz
 
 api_bp = Blueprint("api", __name__)
 CORS(api_bp)
@@ -58,8 +60,37 @@ def register_device():
         "device_id": device_id,
         "name": device_name
     }), 201
+#test----------------------------------------------------------------------------------------------------    
+# 🔹 Receive device status updates
+@api_bp.route("/device_status", methods=["POST"])
+def device_status():
+    data = request.get_json()
+    if not data or "device_id" not in data or "status" not in data:
+        return jsonify({"error": "Invalid request. Missing 'device_id' or 'status'."}), 400
 
-# 🔹 Get devices
+    device_id = data["device_id"]
+    status = data["status"]
+    device_name = data.get("name", device_id)  # update name
+
+    if device_id not in devices:
+        print(f"⚠️ Device '{device_id}' not found. Auto-registering with status...")
+        devices[device_id] = {
+            "name": device_name,
+            "status": status,
+            "last_motion_distance": None,
+            "last_motion_time": None,
+            "last_seen": time.time()
+        }
+    else:
+        devices[device_id].update({
+            "status": status,
+            "last_seen": time.time()
+        })
+        devices[device_id]["name"] = device_name # update name if sent
+    print(f"🔄 Device {device_id} status updated to: {status}")
+    return jsonify({"status": f"Device status updated to {status}", "device_id": device_id}), 200
+#test---------------------------------------------------------------------------------------------------- 
+# 🔹 Get all connected devices
 @api_bp.route("/devices", methods=["GET"])
 def get_devices():
     return jsonify([
@@ -88,7 +119,9 @@ def motion_detected():
 
     device_id = data["device_id"]
     distance = data["distance"]
-    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+
+    cest = pytz.timezone('Europe/Stockholm')  
+    timestamp_cest = datetime.now(cest).strftime("%Y-%m-%d %H:%M:%S")
 
     if device_id not in devices:
         print(f"⚠️ Auto-registering device {device_id}")
@@ -96,41 +129,41 @@ def motion_detected():
             "name": device_id,
             "status": "connected",
             "last_motion_distance": distance,
-            "last_motion_time": timestamp,
+            "last_motion_time": timestamp_cest,
             "last_seen": time.time()
         }
     else:
         devices[device_id].update({
             "last_motion_distance": distance,
-            "last_motion_time": timestamp,
+            "last_motion_time": timestamp_cest,
             "last_seen": time.time(),
             "status": "connected"
         })
 
     log_entry = {
-        "timestamp": timestamp,
+        "timestamp": timestamp_cest,
         "device_id": device_id,
         "distance": distance,
         "message": f"Motion detected ({distance:.2f} cm)"
     }
     logs.append(log_entry)
-    print(f"🚨 [{timestamp}] Motion from {device_id}: {distance:.2f} cm")
+    
+    print(f"🚨 [{timestamp}] Motion detected from {device_id}: {distance:.2f} cm")
 
-    # 🔔 Pushover notifications
-    for user_key in PUSHOVER_USERS:
-        try:
-            r = requests.post("https://api.pushover.net/1/messages.json", data={
-                "token": PUSHOVER_TOKEN,
-                "user": user_key,
-                "title": f"Larm från {device_id}",
-                "message": f"Rörelse upptäckt: {distance:.2f} cm vid {timestamp}"
-            })
-            if r.status_code == 200:
-                print(f"📲 Notis skickad till {user_key}")
-            else:
-                print(f"❌ Misslyckades för {user_key}: {r.text}")
-        except Exception as e:
-            print(f"❌ Fel vid notis för {user_key}: {e}")
+    # 🔔 Skicka Pushover-notis
+    try:
+        r = requests.post("https://api.pushover.net/1/messages.json", data={
+            "token": PUSHOVER_TOKEN,
+            "user": PUSHOVER_USER,
+            "title": f"Larm från {device_id}",
+            "message": f"Rörelse upptäckt: {distance:.2f} cm vid {timestamp_cest}"
+        })
+        if r.status_code == 200:
+            print("📲 Notis skickad!")
+        else:
+            print(f"❌ Kunde inte skicka notis: {r.text}")
+    except Exception as e:
+        print(f"❌ Fel vid försök att skicka notis: {e}")
 
     return jsonify({"status": "Motion recorded", "device_id": device_id, "distance": distance}), 201
 
