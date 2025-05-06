@@ -175,6 +175,22 @@ def motion_detected():
         })
 
 
+# 🔹 Get device status
+@api_bp.route("/device_status/<device_id>", methods=["GET"])
+def get_device_status(device_id):
+    device = devices.get(device_id)
+    if not device:
+        return jsonify({"error": f"No device found with ID '{device_id}'"}), 404
+
+    return jsonify({
+        "device_id": device_id,
+        "name": device["name"],
+        "status": device["status"],
+        "last_seen": device["last_seen"],
+        "last_motion_time": device["last_motion_time"],
+        "last_motion_distance": device["last_motion_distance"]
+    }), 200
+
     # Logga rörelse
     log_entry = {
         "timestamp": timestamp_cest,
