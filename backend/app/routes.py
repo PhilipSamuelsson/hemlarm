@@ -60,20 +60,20 @@ def register_device():
         "device_id": device_id,
         "name": device_name
     }), 201
-#test----------------------------------------------------------------------------------------------------    
-# 🔹 Receive device status updates
+
+# 🔹 Device status update
 @api_bp.route("/device_status", methods=["POST"])
 def device_status():
     data = request.get_json()
     if not data or "device_id" not in data or "status" not in data:
-        return jsonify({"error": "Invalid request. Missing 'device_id' or 'status'."}), 400
+        return jsonify({"error": "Missing 'device_id' or 'status'."}), 400
 
     device_id = data["device_id"]
     status = data["status"]
-    device_name = data.get("name", device_id)  # update name
+    device_name = data.get("name", device_id)
 
     if device_id not in devices:
-        print(f"⚠️ Device '{device_id}' not found. Auto-registering with status...")
+        print(f"⚠️ Auto-registering device '{device_id}' with status...")
         devices[device_id] = {
             "name": device_name,
             "status": status,
@@ -86,11 +86,12 @@ def device_status():
             "status": status,
             "last_seen": time.time()
         })
-        devices[device_id]["name"] = device_name # update name if sent
+        devices[device_id]["name"] = device_name
+
     print(f"🔄 Device {device_id} status updated to: {status}")
     return jsonify({"status": f"Device status updated to {status}", "device_id": device_id}), 200
-#test---------------------------------------------------------------------------------------------------- 
-# 🔹 Get all connected devices
+
+# 🔹 Get all devices
 @api_bp.route("/devices", methods=["GET"])
 def get_devices():
     return jsonify([
@@ -120,7 +121,7 @@ def motion_detected():
     device_id = data["device_id"]
     distance = data["distance"]
 
-    cest = pytz.timezone('Europe/Stockholm')  
+    cest = pytz.timezone('Europe/Stockholm')
     timestamp_cest = datetime.now(cest).strftime("%Y-%m-%d %H:%M:%S")
 
     if device_id not in devices:
@@ -147,27 +148,28 @@ def motion_detected():
         "message": f"Motion detected ({distance:.2f} cm)"
     }
     logs.append(log_entry)
-    
-    print(f"🚨 [{timestamp}] Motion detected from {device_id}: {distance:.2f} cm")
 
-    # 🔔 Skicka Pushover-notis
-    try:
-        r = requests.post("https://api.pushover.net/1/messages.json", data={
-            "token": PUSHOVER_TOKEN,
-            "user": PUSHOVER_USER,
-            "title": f"Larm från {device_id}",
-            "message": f"Rörelse upptäckt: {distance:.2f} cm vid {timestamp_cest}"
-        })
-        if r.status_code == 200:
-            print("📲 Notis skickad!")
-        else:
-            print(f"❌ Kunde inte skicka notis: {r.text}")
-    except Exception as e:
-        print(f"❌ Fel vid försök att skicka notis: {e}")
+    print(f"🚨 [{timestamp_cest}] Motion detected from {device_id}: {distance:.2f} cm")
+
+    # 🔔 Skicka Pushover-notis till alla användare
+    for user_key in PUSHOVER_USERS:
+        try:
+            r = requests.post("https://api.pushover.net/1/messages.json", data={
+                "token": PUSHOVER_TOKEN,
+                "user": user_key,
+                "title": f"Larm från {device_id}",
+                "message": f"Rörelse upptäckt: {distance:.2f} cm vid {timestamp_cest}"
+            })
+            if r.status_code == 200:
+                print(f"📲 Notis skickad till {user_key}!")
+            else:
+                print(f"❌ Kunde inte skicka notis till {user_key}: {r.text}")
+        except Exception as e:
+            print(f"❌ Fel vid försök att skicka notis till {user_key}: {e}")
 
     return jsonify({"status": "Motion recorded", "device_id": device_id, "distance": distance}), 201
 
-# 🔹 Background task: Mark inactive devices
+# 🔹 Background thread: mark devices as disconnected
 def check_inactive_devices():
     while True:
         current_time = time.time()
