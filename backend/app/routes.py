@@ -176,7 +176,7 @@ def motion_detected():
 
 
 # 🔹 Get device status
-@api_bp.route("/device_status", methods=["GET"])
+@api_bp.route("/device_status_list", methods=["GET"])
 def get_all_device_statuses():
     return jsonify([
         {
