@@ -55,10 +55,13 @@ def register_device():
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                INSERT INTO devices (device_id, name)
-                VALUES (%s, %s)
-                ON CONFLICT (device_id) DO NOTHING;
-            """, (device_id, device_name))
+                INSERT INTO devices (device_id, name, status, last_seen)
+                VALUES (%s, %s, %s, NOW())
+                ON CONFLICT (device_id) DO UPDATE
+                SET name = EXCLUDED.name,
+                    status = EXCLUDED.status,
+                    last_seen = EXCLUDED.last_seen;
+            """, (device_id, device_name, "connected"))
             conn.commit()
     except Exception as e:
         print(f"❌ DB error on register_device: {e}")
@@ -92,6 +95,20 @@ def device_status():
             "last_seen": time.time(),
             "name": device_name
         })
+
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO devices (device_id, name, status, last_seen)
+                VALUES (%s, %s, %s, NOW())
+                ON CONFLICT (device_id) DO UPDATE
+                SET name = EXCLUDED.name,
+                    status = EXCLUDED.status,
+                    last_seen = EXCLUDED.last_seen;
+            """, (device_id, device_name, status))
+            conn.commit()
+    except Exception as e:
+        print(f"❌ DB error on device_status: {e}")
 
     print(f"🔄 {device_id} status: {status}")
     return jsonify({"status": f"Device status updated to {status}", "device_id": device_id}), 200
@@ -168,7 +185,7 @@ def motion_detected():
         "device_id": device_id,
         "distance": distance,
         "alarm_active": alarm_active,
-        "message": f"Rörelse: {distance:.2f} cm ({'aktivt larm' if alarm_active else 'passivt'})"
+        "message": f"R\u00f6relse: {distance:.2f} cm ({'aktivt larm' if alarm_active else 'passivt'})"
     }
     logs.append(log_entry)
 
@@ -190,8 +207,8 @@ def motion_detected():
                 r = requests.post("https://api.pushover.net/1/messages.json", data={
                     "token": PUSHOVER_TOKEN,
                     "user": user,
-                    "title": f"Larm från {device_id}",
-                    "message": f"Rörelse: {distance:.2f} cm vid {timestamp_cest}"
+                    "title": f"Larm fr\u00e5n {device_id}",
+                    "message": f"R\u00f6relse: {distance:.2f} cm vid {timestamp_cest}"
                 })
                 if r.status_code == 200:
                     print("📲 Notis skickad!")
