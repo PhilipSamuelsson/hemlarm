@@ -1,3 +1,4 @@
+
 from flask import Blueprint, jsonify, request
 import time
 import threading
@@ -26,8 +27,9 @@ PUSHOVER_USERS = [
     "u1s3rfg1knys87gtsbom6v6oyjkhx1",
 ]
 
-# 🔹 Database connection
-conn = psycopg2.connect(os.environ["DATABASE_URL"], sslmode='require')
+# 🔹 Helper to open fresh DB connection
+def get_conn():
+    return psycopg2.connect(os.environ["DATABASE_URL"], sslmode='require')
 
 # 🔹 Health check
 @api_bp.route("/health", methods=["GET"])
@@ -53,16 +55,17 @@ def register_device():
     }
 
     try:
-        with conn.cursor() as cur:
-            cur.execute("""
-                INSERT INTO devices (device_id, name, status, last_seen)
-                VALUES (%s, %s, %s, NOW())
-                ON CONFLICT (device_id) DO UPDATE
-                SET name = EXCLUDED.name,
-                    status = EXCLUDED.status,
-                    last_seen = EXCLUDED.last_seen;
-            """, (device_id, device_name, "connected"))
-            conn.commit()
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO devices (id, name, status, last_seen)
+                    VALUES (%s, %s, %s, NOW())
+                    ON CONFLICT (id) DO UPDATE
+                    SET name = EXCLUDED.name,
+                        status = EXCLUDED.status,
+                        last_seen = EXCLUDED.last_seen;
+                """, (device_id, device_name, "connected"))
+                conn.commit()
     except Exception as e:
         print(f"❌ DB error on register_device: {e}")
 
@@ -97,16 +100,17 @@ def device_status():
         })
 
     try:
-        with conn.cursor() as cur:
-            cur.execute("""
-                INSERT INTO devices (device_id, name, status, last_seen)
-                VALUES (%s, %s, %s, NOW())
-                ON CONFLICT (device_id) DO UPDATE
-                SET name = EXCLUDED.name,
-                    status = EXCLUDED.status,
-                    last_seen = EXCLUDED.last_seen;
-            """, (device_id, device_name, status))
-            conn.commit()
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO devices (id, name, status, last_seen)
+                    VALUES (%s, %s, %s, NOW())
+                    ON CONFLICT (id) DO UPDATE
+                    SET name = EXCLUDED.name,
+                        status = EXCLUDED.status,
+                        last_seen = EXCLUDED.last_seen;
+                """, (device_id, device_name, status))
+                conn.commit()
     except Exception as e:
         print(f"❌ DB error on device_status: {e}")
 
@@ -153,7 +157,6 @@ def get_logs():
 @api_bp.route("/motion_detected", methods=["POST"])
 def motion_detected():
     data = request.get_json()
-
     if not data or "device_id" not in data or "distance" not in data:
         return jsonify({"error": "Missing required fields."}), 400
 
@@ -185,17 +188,18 @@ def motion_detected():
         "device_id": device_id,
         "distance": distance,
         "alarm_active": alarm_active,
-        "message": f"R\u00f6relse: {distance:.2f} cm ({'aktivt larm' if alarm_active else 'passivt'})"
+        "message": f"Rörelse: {distance:.2f} cm ({'aktivt larm' if alarm_active else 'passivt'})"
     }
     logs.append(log_entry)
 
     try:
-        with conn.cursor() as cur:
-            cur.execute("""
-                INSERT INTO alarm_logs (device_id, timestamp, distance, alarm_active, message)
-                VALUES (%s, %s, %s, %s, %s);
-            """, (device_id, timestamp_cest, distance, alarm_active, log_entry["message"]))
-            conn.commit()
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO alarm_logs (device_id, timestamp, distance, alarm_active, message)
+                    VALUES (%s, %s, %s, %s, %s);
+                """, (device_id, timestamp_cest, distance, alarm_active, log_entry["message"]))
+                conn.commit()
     except Exception as e:
         print(f"❌ DB error on motion log: {e}")
 
@@ -207,8 +211,8 @@ def motion_detected():
                 r = requests.post("https://api.pushover.net/1/messages.json", data={
                     "token": PUSHOVER_TOKEN,
                     "user": user,
-                    "title": f"Larm fr\u00e5n {device_id}",
-                    "message": f"R\u00f6relse: {distance:.2f} cm vid {timestamp_cest}"
+                    "title": f"Larm från {device_id}",
+                    "message": f"Rörelse: {distance:.2f} cm vid {timestamp_cest}"
                 })
                 if r.status_code == 200:
                     print("📲 Notis skickad!")
@@ -249,3 +253,4 @@ def check_inactive_devices():
         time.sleep(30)
 
 threading.Thread(target=check_inactive_devices, daemon=True).start()
+
