@@ -184,6 +184,17 @@ def motion_detected():
     }
     logs.append(log_entry)
 
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO alarm_logs (device_id, timestamp, distance, alarm_active, message)
+                VALUES (%s, %s, %s, %s, %s);
+            """, (device_id, timestamp_cest, distance, alarm_active, log_entry["message"]))
+            conn.commit()
+            print("💾 Logg sparad i databasen.")
+    except Exception as e:
+        print(f"❌ Databasfel vid loggning: {e}")
+
     print(f"🚨 [{timestamp_cest}] Motion from {device_id}: {distance:.2f} cm (active={alarm_active})")
 
     if alarm_active:
