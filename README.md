@@ -1,11 +1,5 @@
 # Plan
-
 ```mermaid
-graph TD;
-
-    subgraph Frontend_NextJS
-        UI[User Interface]
-        UI -->|Fetch API| API_Frontend
 graph TD
     subgraph "💡 Rörelsedetektor"
         A[Pico W<br/>C/C++]
@@ -16,16 +10,10 @@ graph TD
         C[Pi Zero 2 W <Br/> MQTT Broker]
         B -->|MQTT / WiFi| C
     end
-
-    subgraph IoT_Edge_Devices
-        RPi3["Raspberry Pi 3 (Gateway)"]
-        Pico1["Raspberry Pi Pico W #1"]
-        Pico2["Raspberry Pi Pico W #2"]
-        PicoN["Raspberry Pi Pico W #N"]
     subgraph " Backend "
         D[Flask Server<Br/>API]
         C -->|HTTP POST / MQTT| D
-        D -->|Skicka SMS| G[SMS-Tjänst]
+        D -->|Skicka notis| G[Notis-Tjänst]
     end
 
     subgraph "🗄️ Databas"
@@ -33,7 +21,10 @@ graph TD
         D -->|Spara data| E
     end
 
-    API_Frontend -->|Trigger Notification| Notifier
+    subgraph "🌍 Webapp"
+        F[Next.js Frontend]
+        F -->|GET devices / logs| D
+    end
 ```
 
 # Leverans
