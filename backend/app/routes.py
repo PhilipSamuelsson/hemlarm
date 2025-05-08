@@ -184,6 +184,9 @@ def motion_detected():
     }
     logs.append(log_entry)
 
+    print(f"🚨 [{timestamp_cest}] Motion from {device_id}: {distance:.2f} cm (active={alarm_active})")
+
+    # 🔹 Spara logg i databasen
     try:
         with conn.cursor() as cur:
             cur.execute("""
@@ -191,12 +194,11 @@ def motion_detected():
                 VALUES (%s, %s, %s, %s, %s);
             """, (device_id, timestamp_cest, distance, alarm_active, log_entry["message"]))
             conn.commit()
-            print("💾 Logg sparad i databasen.")
+            print("💾 Rörelselog sparad i databasen.")
     except Exception as e:
         print(f"❌ Databasfel vid loggning: {e}")
 
-    print(f"🚨 [{timestamp_cest}] Motion from {device_id}: {distance:.2f} cm (active={alarm_active})")
-
+    # 🔹 Skicka Pushover notis
     if alarm_active:
         try:
             for user in PUSHOVER_USERS:
