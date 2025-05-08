@@ -44,32 +44,28 @@ def register_device():
     device_id = data["device_id"]
     device_name = data.get("name", device_id)
 
-    if device_id in devices:
-        return jsonify({
-            "status": "Device already registered",
-            "device_id": device_id,
-            "name": devices[device_id]["name"]
-        }), 200
-
-    devices[device_id] = {
-        "name": device_name,
-        "status": "connected",
-        "last_motion_distance": None,
-        "last_motion_time": None,
-        "last_seen": time.time()
-    }
-
+    # Uppdatera/inserta i databasen
     try:
         with conn.cursor() as cur:
             cur.execute("""
                 INSERT INTO devices (device_id, name)
                 VALUES (%s, %s)
-                ON CONFLICT (device_id) DO NOTHING;
+                ON CONFLICT (device_id) DO UPDATE SET name = EXCLUDED.name;
             """, (device_id, device_name))
             conn.commit()
-            print("💾 Enhet sparad i databasen.")
+            print("💾 Enhet sparad eller uppdaterad i databasen.")
     except Exception as e:
         print(f"❌ Databasfel vid enhetsregistrering: {e}")
+
+    # Uppdatera i minnet
+    if device_id not in devices:
+        devices[device_id] = {
+            "name": device_name,
+            "status": "connected",
+            "last_motion_distance": None,
+            "last_motion_time": None,
+            "last_seen": time.time()
+        }
 
     print(f"✅ New device registered: {device_id} ({device_name})")
     return jsonify({
@@ -184,21 +180,20 @@ def motion_detected():
     }
     logs.append(log_entry)
 
-    print(f"🚨 [{timestamp_cest}] Motion from {device_id}: {distance:.2f} cm (active={alarm_active})")
-
-    # 🔹 Spara logg i databasen
+    # 🔹 Spara i databasen
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                INSERT INTO alarm_logs (device_id, timestamp, distance, alarm_active, message)
+                INSERT INTO alarm_logs (timestamp, device_id, message, distance, alarm_active)
                 VALUES (%s, %s, %s, %s, %s);
-            """, (device_id, timestamp_cest, distance, alarm_active, log_entry["message"]))
+            """, (timestamp_cest, device_id, log_entry["message"], distance, alarm_active))
             conn.commit()
-            print("💾 Rörelselog sparad i databasen.")
+            print("💾 Logg sparad i databasen.")
     except Exception as e:
         print(f"❌ Databasfel vid loggning: {e}")
 
-    # 🔹 Skicka Pushover notis
+    print(f"🚨 [{timestamp_cest}] Motion from {device_id}: {distance:.2f} cm (active={alarm_active})")
+
     if alarm_active:
         try:
             for user in PUSHOVER_USERS:
