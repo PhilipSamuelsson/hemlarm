@@ -5,6 +5,8 @@ import requests
 from flask_cors import CORS
 from datetime import datetime
 import pytz
+import psycopg2
+import os
 
 api_bp = Blueprint("api", __name__)
 CORS(api_bp)
@@ -18,11 +20,14 @@ DISCONNECT_THRESHOLD = 30
 MAX_LOGS = 50
 
 # 🔹 Pushover settings
-PUSHOVER_TOKEN = "ae65hr6iroswx6j1srwgqhm3qncs77"  # Application token
+PUSHOVER_TOKEN = "ae65hr6iroswx6j1srwgqhm3qncs77"
 PUSHOVER_USERS = [
     "uiku12gm15jk5namtmv5td1vnttuiv",
-    "u1s3rfg1knys87gtsbom6v6oyjkhx1",    # Lägg till fler användarnycklar här
+    "u1s3rfg1knys87gtsbom6v6oyjkhx1",
 ]
+
+# 🔹 Database connection
+conn = psycopg2.connect(os.environ["DATABASE_URL"], sslmode='require')
 
 # 🔹 Health check
 @api_bp.route("/health", methods=["GET"])
@@ -53,6 +58,18 @@ def register_device():
         "last_motion_time": None,
         "last_seen": time.time()
     }
+
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO devices (device_id, name)
+                VALUES (%s, %s)
+                ON CONFLICT (device_id) DO NOTHING;
+            """, (device_id, device_name))
+            conn.commit()
+            print("💾 Enhet sparad i databasen.")
+    except Exception as e:
+        print(f"❌ Databasfel vid enhetsregistrering: {e}")
 
     print(f"✅ New device registered: {device_id} ({device_name})")
     return jsonify({
@@ -216,5 +233,4 @@ def check_inactive_devices():
                 print(f"⚠️ Device {device_id} marked as disconnected.")
         time.sleep(30)
 
-# 🔹 Start background thread
 threading.Thread(target=check_inactive_devices, daemon=True).start()
