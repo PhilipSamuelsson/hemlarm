@@ -11,7 +11,7 @@ import os
 api_bp = Blueprint("api", __name__)
 CORS(api_bp)
 
-# 🔹 In-memory storage for devices & logs
+# 🔹 In-memory storage for short-term display
 devices = {}
 logs = []
 
@@ -44,35 +44,27 @@ def register_device():
     device_id = data["device_id"]
     device_name = data.get("name", device_id)
 
-    # Uppdatera/inserta i databasen
+    devices[device_id] = {
+        "name": device_name,
+        "status": "connected",
+        "last_motion_distance": None,
+        "last_motion_time": None,
+        "last_seen": time.time()
+    }
+
     try:
         with conn.cursor() as cur:
             cur.execute("""
                 INSERT INTO devices (device_id, name)
                 VALUES (%s, %s)
-                ON CONFLICT (device_id) DO UPDATE SET name = EXCLUDED.name;
+                ON CONFLICT (device_id) DO NOTHING;
             """, (device_id, device_name))
             conn.commit()
-            print("💾 Enhet sparad eller uppdaterad i databasen.")
     except Exception as e:
-        print(f"❌ Databasfel vid enhetsregistrering: {e}")
+        print(f"❌ DB error on register_device: {e}")
 
-    # Uppdatera i minnet
-    if device_id not in devices:
-        devices[device_id] = {
-            "name": device_name,
-            "status": "connected",
-            "last_motion_distance": None,
-            "last_motion_time": None,
-            "last_seen": time.time()
-        }
-
-    print(f"✅ New device registered: {device_id} ({device_name})")
-    return jsonify({
-        "status": "Device registered",
-        "device_id": device_id,
-        "name": device_name
-    }), 201
+    print(f"✅ Registered: {device_id} ({device_name})")
+    return jsonify({"status": "Device registered", "device_id": device_id, "name": device_name}), 201
 
 # 🔹 Device status update
 @api_bp.route("/device_status", methods=["POST"])
@@ -86,7 +78,7 @@ def device_status():
     device_name = data.get("name", device_id)
 
     if device_id not in devices:
-        print(f"⚠️ Auto-registering device '{device_id}' with status...")
+        print(f"⚠️ Auto-registering {device_id} with status")
         devices[device_id] = {
             "name": device_name,
             "status": status,
@@ -97,11 +89,11 @@ def device_status():
     else:
         devices[device_id].update({
             "status": status,
-            "last_seen": time.time()
+            "last_seen": time.time(),
+            "name": device_name
         })
-        devices[device_id]["name"] = device_name
 
-    print(f"🔄 Device {device_id} status updated to: {status}")
+    print(f"🔄 {device_id} status: {status}")
     return jsonify({"status": f"Device status updated to {status}", "device_id": device_id}), 200
 
 # 🔹 Get single device status
@@ -180,19 +172,17 @@ def motion_detected():
     }
     logs.append(log_entry)
 
-    # 🔹 Spara i databasen
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                INSERT INTO alarm_logs (timestamp, device_id, message, distance, alarm_active)
+                INSERT INTO alarm_logs (device_id, timestamp, distance, alarm_active, message)
                 VALUES (%s, %s, %s, %s, %s);
-            """, (timestamp_cest, device_id, log_entry["message"], distance, alarm_active))
+            """, (device_id, timestamp_cest, distance, alarm_active, log_entry["message"]))
             conn.commit()
-            print("💾 Logg sparad i databasen.")
     except Exception as e:
-        print(f"❌ Databasfel vid loggning: {e}")
+        print(f"❌ DB error on motion log: {e}")
 
-    print(f"🚨 [{timestamp_cest}] Motion from {device_id}: {distance:.2f} cm (active={alarm_active})")
+    print(f"🚨 [{timestamp_cest}] {device_id}: {distance:.2f} cm (active={alarm_active})")
 
     if alarm_active:
         try:
@@ -238,7 +228,7 @@ def check_inactive_devices():
         for device_id, details in devices.items():
             if current_time - details.get("last_seen", 0) > DISCONNECT_THRESHOLD and details["status"] == "connected":
                 devices[device_id]["status"] = "disconnected"
-                print(f"⚠️ Device {device_id} marked as disconnected.")
+                print(f"⚠️ {device_id} marked as disconnected.")
         time.sleep(30)
 
 threading.Thread(target=check_inactive_devices, daemon=True).start()
