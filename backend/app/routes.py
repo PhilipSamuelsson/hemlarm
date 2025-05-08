@@ -58,13 +58,13 @@ def register_device():
         with get_conn() as conn:
             with conn.cursor() as cur:
                 cur.execute("""
-                    INSERT INTO devices (id, name, status, last_seen)
+                    INSERT INTO devices (id, device_name, is_active, last_seen)
                     VALUES (%s, %s, %s, NOW())
                     ON CONFLICT (id) DO UPDATE
-                    SET name = EXCLUDED.name,
-                        status = EXCLUDED.status,
+                    SET device_name = EXCLUDED.device_name,
+                        is_active = EXCLUDED.is_active,
                         last_seen = EXCLUDED.last_seen;
-                """, (device_id, device_name, "connected"))
+                """, (device_id, device_name, True))
                 conn.commit()
     except Exception as e:
         print(f"❌ DB error on register_device: {e}")
@@ -103,13 +103,13 @@ def device_status():
         with get_conn() as conn:
             with conn.cursor() as cur:
                 cur.execute("""
-                    INSERT INTO devices (id, name, status, last_seen)
+                    INSERT INTO devices (id, device_name, is_active, last_seen)
                     VALUES (%s, %s, %s, NOW())
                     ON CONFLICT (id) DO UPDATE
-                    SET name = EXCLUDED.name,
-                        status = EXCLUDED.status,
+                    SET device_name = EXCLUDED.device_name,
+                        is_active = EXCLUDED.is_active,
                         last_seen = EXCLUDED.last_seen;
-                """, (device_id, device_name, status))
+                """, (device_id, device_name, status == "connected"))
                 conn.commit()
     except Exception as e:
         print(f"❌ DB error on device_status: {e}")
