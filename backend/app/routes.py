@@ -242,15 +242,5 @@ def get_all_device_statuses():
         for device_id, device in devices.items()
     ]), 200
 
-# 🔹 Background thread: mark devices as disconnected
-def check_inactive_devices():
-    while True:
-        current_time = time.time()
-        for device_id, details in devices.items():
-            if current_time - details.get("last_seen", 0) > DISCONNECT_THRESHOLD and details["status"] == "connected":
-                devices[device_id]["status"] = "disconnected"
-                print(f"⚠️ {device_id} marked as disconnected.")
-        time.sleep(30)
-
 threading.Thread(target=check_inactive_devices, daemon=True).start()
 

@@ -12,42 +12,47 @@ const Dashboard = () => {
   const logsPerPage = 10;
 
   // 🔹 Fetch devices
-  useEffect(() => {
-    const fetchDevices = async () => {
-      try {
-        const res = await fetch(`${API_URL}/devices`);
-        if (!res.ok) throw new Error(`Failed to fetch devices: ${res.status}`);
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setDevices(data);
-        } else if (typeof data === "object") {
-          setDevices(Object.entries(data).map(([id, details]) => ({ id, ...details })));
-        }
-      } catch (err) {
-        console.error("Error fetching devices:", err);
+  const fetchDevices = async () => {
+    try {
+      const res = await fetch(`${API_URL}/devices`);
+      if (!res.ok) throw new Error(`Failed to fetch devices: ${res.status}`);
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setDevices(data);
+      } else if (typeof data === "object") {
+        setDevices(Object.entries(data).map(([id, details]) => ({ id, ...details })));
       }
-    };
-
-    fetchDevices();
-  }, []);
+    } catch (err) {
+      console.error("Error fetching devices:", err);
+    }
+  };
 
   // 🔹 Fetch logs
-  useEffect(() => {
-    const fetchLogs = async () => {
-      try {
-        const res = await fetch(`${API_URL}/logs?_page=${currentPage}&_limit=${logsPerPage}&_sort=timestamp&_order=desc`);
-        if (!res.ok) throw new Error(`Failed to fetch logs: ${res.status}`);
-        const data = await res.json();
-        if (Array.isArray(data)) setLogs(data);
-        else setLogs([]);
-      } catch (err) {
-        console.error("Error fetching logs:", err);
-      } finally {
-        setLoadingLogs(false);
-      }
-    };
+  const fetchLogs = async () => {
+    setLoadingLogs(true);
+    try {
+      const res = await fetch(`${API_URL}/logs?_page=${currentPage}&_limit=${logsPerPage}&_sort=timestamp&_order=desc`);
+      if (!res.ok) throw new Error(`Failed to fetch logs: ${res.status}`);
+      const data = await res.json();
+      if (Array.isArray(data)) setLogs(data);
+      else setLogs([]);
+    } catch (err) {
+      console.error("Error fetching logs:", err);
+    } finally {
+      setLoadingLogs(false);
+    }
+  };
 
+  // 🔁 Auto-refresh every 5 seconds
+  useEffect(() => {
+    fetchDevices();
     fetchLogs();
+    const interval = setInterval(() => {
+      fetchDevices();
+      fetchLogs();
+    }, 5000);
+
+    return () => clearInterval(interval); // cleanup
   }, [currentPage]);
 
   return (
