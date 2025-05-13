@@ -242,5 +242,5 @@ def get_all_device_statuses():
         for device_id, device in devices.items()
     ]), 200
 
-threading.Thread(target=check_inactive_devices, daemon=True).start()
+threading.Thread(daemon=True).start()
 
