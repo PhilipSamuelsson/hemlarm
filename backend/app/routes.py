@@ -48,7 +48,7 @@ def register_device():
 
     devices[device_id] = {
         "name": device_name,
-        "status": "connected",
+        "status": "online",
         "last_motion_distance": None,
         "last_motion_time": None,
         "last_seen": time.time()
@@ -170,7 +170,7 @@ def motion_detected():
     if device_id not in devices:
         devices[device_id] = {
             "name": device_id,
-            "status": "connected",
+            "status": "online",
             "last_motion_distance": distance,
             "last_motion_time": timestamp_cest,
             "last_seen": time.time()
@@ -180,7 +180,7 @@ def motion_detected():
             "last_motion_distance": distance,
             "last_motion_time": timestamp_cest,
             "last_seen": time.time(),
-            "status": "connected"
+            "status": "online"
         })
 
     log_entry = {
