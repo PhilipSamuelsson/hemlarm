@@ -23,8 +23,9 @@ MAX_LOGS = 50
 # 🔹 Pushover settings
 PUSHOVER_TOKEN = "ae65hr6iroswx6j1srwgqhm3qncs77"
 PUSHOVER_USERS = [
-    "uiku12gm15jk5namtmv5td1vnttuiv",
-    "u1s3rfg1knys87gtsbom6v6oyjkhx1",
+    "uiku12gm15jk5namtmv5td1vnttuiv", #Philip
+    "u1s3rfg1knys87gtsbom6v6oyjkhx1", #gul
+    "usre5z1ad9jghda42rekqza7h2mavt", #Johan
 ]
 
 # 🔹 Helper to open fresh DB connection
