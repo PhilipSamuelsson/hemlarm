@@ -52,15 +52,42 @@ const Dashboard = () => {
       fetchLogs();
     }, 5000);
 
-    return () => clearInterval(interval); // cleanup
+    return () => clearInterval(interval);
   }, [currentPage]);
+
+  // 🔹 Clear logs
+  const clearLogs = async () => {
+    try {
+      const res = await fetch(`${API_URL}/clear_logs`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to clear logs");
+      fetchLogs(); // Refresh logs
+    } catch (err) {
+      console.error("Error clearing logs:", err);
+    }
+  };
+
+  // 🔹 Clear devices
+  const clearDevices = async () => {
+    try {
+      const res = await fetch(`${API_URL}/clear_devices`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to clear devices");
+      fetchDevices(); // Refresh devices
+    } catch (err) {
+      console.error("Error clearing devices:", err);
+    }
+  };
 
   return (
     <div className="p-8 bg-gray-900 min-h-screen text-white">
       <h1 className="text-2xl mb-4">IoT Alarm Dashboard</h1>
 
       <div className="p-4 border rounded-md bg-gray-800 shadow-lg">
-        <h2 className="text-xl mb-2">Connected Devices</h2>
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="text-xl">Connected Devices</h2>
+          <button onClick={clearDevices} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">
+            Rensa enheter
+          </button>
+        </div>
         {devices.length === 0 ? (
           <p className="text-gray-400">No devices connected</p>
         ) : (
@@ -83,7 +110,12 @@ const Dashboard = () => {
       </div>
 
       <div className="p-4 border rounded-md bg-gray-800 shadow-lg mt-4">
-        <h2 className="text-xl mb-2">Activity Log</h2>
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="text-xl">Activity Log</h2>
+          <button onClick={clearLogs} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">
+            Rensa loggar
+          </button>
+        </div>
         {loadingLogs ? (
           <p className="text-gray-400">Loading logs...</p>
         ) : logs.length === 0 ? (
