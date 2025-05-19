@@ -1,4 +1,3 @@
-
 from flask import Blueprint, jsonify, request
 import time
 import threading
@@ -148,10 +147,36 @@ def get_devices():
         for device_id, details in devices.items()
     ]), 200
 
+# 🔹 Clear all devices
+@api_bp.route("/clear_devices", methods=["POST"])
+def clear_devices():
+    devices.clear()
+    try:
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM devices;")
+                conn.commit()
+    except Exception as e:
+        print(f"❌ DB error clearing devices: {e}")
+    return jsonify({"status": "All devices cleared"}), 200
+
 # 🔹 Get logs
 @api_bp.route("/logs", methods=["GET"])
 def get_logs():
     return jsonify(logs[-MAX_LOGS:]), 200
+
+# 🔹 Clear logs
+@api_bp.route("/clear_logs", methods=["POST"])
+def clear_logs():
+    logs.clear()
+    try:
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM alarm_logs;")
+                conn.commit()
+    except Exception as e:
+        print(f"❌ DB error clearing logs: {e}")
+    return jsonify({"status": "Logs cleared"}), 200
 
 # 🔹 Motion detected
 @api_bp.route("/motion_detected", methods=["POST"])
@@ -242,5 +267,5 @@ def get_all_device_statuses():
         for device_id, device in devices.items()
     ]), 200
 
+# 🔹 Background thread placeholder (optional)
 threading.Thread(daemon=True).start()
-
